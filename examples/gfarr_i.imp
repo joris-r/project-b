@@ -1,0 +1,43 @@
+IMPLEMENTATION
+  gfarr_i(VALUE, default_val, capacity)
+  
+REFINES
+    gfarr
+    
+INITIALISATION
+    arr := (1..capacity) * {default_val}
+
+OPERATIONS
+    
+    val <-- get(ind) = 
+    BEGIN
+        val := arr(ind)
+    END;
+    
+    set(ind, val) =
+    BEGIN
+        arr(ind) := val
+    END;
+    
+    shift_right =
+    VAR
+        ii
+    IN
+        ii := capacity;
+        WHILE 2 <= ii DO
+            arr(ii-1) := arr(ii);
+            ii := ii - 1
+        INVARIANT
+            1..ii <| arr = 1..ii <| arr$0 &
+            ii+1..capacity <| arr = (%xx.( xx : ii+1..capacity | xx - 1 ) ; arr)
+        VARIANT
+            ii
+        END
+    END;
+    
+    shift_left =
+    BEGIN
+        skip // à faire
+    END
+
+ END
