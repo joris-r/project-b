@@ -30,17 +30,12 @@ fn scan(source : & str) -> Vec<Token> {
 fn scan_spaces(source : &str, state : &mut ScannerState){
     let mut l = state.i;
     loop {
-        if l < source.len() && (
-            source.chars().nth(l).unwrap() == ' '
-         || source.chars().nth(l).unwrap() == '\t'
-         || source.chars().nth(l).unwrap() == '\n')
-        {
-            l += 1
-        } else {
-            break
+        match source.chars().nth(l) {
+            Some(' ') | Some('\t') | Some('\n') => l += 1,
+            _ => break,
         }
     }
-    if l != state.i && state.j < l {
+    if state.j < l {
         state.j = l;
         state.token = Token::Spaces(state.i, l)
     }
