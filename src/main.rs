@@ -1,10 +1,7 @@
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-enum Token {
-    Error,
-    Spaces(usize, usize),
-    Comment(usize, usize),
-}
+mod syntax;
+
+use syntax::Token;
 
 #[test]
 fn test_trivial(){
