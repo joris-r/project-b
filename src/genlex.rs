@@ -6,6 +6,7 @@ const SPACES_CYCLE : [char; 3] = ['\n', '\t', ' '];
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GenToken {
     Spaces(String),
+    CommentMono(String),
 }
 
 pub struct LexGen {
@@ -26,7 +27,8 @@ fn length_list(src : &Vec<GenToken>) -> usize{
 
 fn length_token(token : &GenToken) -> usize{
     match token {
-        &GenToken::Spaces(ref s) => s.len()
+        &GenToken::Spaces(ref s) => s.len(),
+        &GenToken::CommentMono(ref s) => "//".len() + s.len(),
     }
 }
 
@@ -45,11 +47,39 @@ impl LexGen {
                     } else if length_list(&elem) > self.size {
                         continue;
                     } else {
+                    
                         for c in SPACES_CYCLE.iter() {
                             let mut new = elem.clone();
+                            match elem.last() {
+                                Some(&GenToken::CommentMono(_)) => {
+                                    new.push(GenToken::Spaces("\n".to_string()));
+                                },
+                                _ => {},
+                            }
                             new.push(GenToken::Spaces(c.to_string()));
                             self.list.push(new);
                         }
+                        
+                        let mut new = elem.clone();
+                        match elem.last() {
+                            Some(&GenToken::CommentMono(_)) => {
+                                new.push(GenToken::Spaces("\n".to_string()));
+                            },
+                            _ => {},
+                        }
+                        new.push(GenToken::CommentMono("".to_string()));
+                        self.list.push(new);
+                        
+                        let mut new = elem.clone();
+                        match elem.last() {
+                            Some(&GenToken::CommentMono(_)) => {
+                                new.push(GenToken::Spaces("\n".to_string()));
+                            },
+                            _ => {},
+                        }
+                        new.push(GenToken::CommentMono("A".to_string()));
+                        self.list.push(new);
+                        
                         continue;
                     }
                 }
@@ -80,6 +110,13 @@ fn generate(res : &Vec<GenToken>) -> (String, Vec<Token>) {
                     }
                 }
                 before = res_str.len();
+            }
+            GenToken::CommentMono(s) => {
+                res_str.push_str("//");
+                res_str.push_str(&s);
+                let len = res_str.len();
+                res_tok.push( Token::Comment(before, len) );
+                before = len;
             }
         }
     }
@@ -118,6 +155,10 @@ fn test_gen() {
             Token::Spaces(0,1),
         ])));
         
+    assert_eq!(gen.next(), Some((
+        "//".to_string(), vec![
+            Token::Comment(0,2),
+        ])));
     assert_eq!(gen.next(), Some((
         "  ".to_string(), vec![
             Token::Spaces(0,2),
