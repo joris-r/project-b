@@ -50,34 +50,18 @@ impl LexGen {
                     
                         for c in SPACES_CYCLE.iter() {
                             let mut new = elem.clone();
-                            match elem.last() {
-                                Some(&GenToken::CommentMono(_)) => {
-                                    new.push(GenToken::Spaces("\n".to_string()));
-                                },
-                                _ => {},
-                            }
                             new.push(GenToken::Spaces(c.to_string()));
                             self.list.push(new);
                         }
                         
                         let mut new = elem.clone();
-                        match elem.last() {
-                            Some(&GenToken::CommentMono(_)) => {
-                                new.push(GenToken::Spaces("\n".to_string()));
-                            },
-                            _ => {},
-                        }
                         new.push(GenToken::CommentMono("".to_string()));
+                        new.push(GenToken::Spaces("\n".to_string()));
                         self.list.push(new);
                         
                         let mut new = elem.clone();
-                        match elem.last() {
-                            Some(&GenToken::CommentMono(_)) => {
-                                new.push(GenToken::Spaces("\n".to_string()));
-                            },
-                            _ => {},
-                        }
                         new.push(GenToken::CommentMono("A".to_string()));
+                        new.push(GenToken::Spaces("\n".to_string()));
                         self.list.push(new);
                         
                         continue;
@@ -155,10 +139,6 @@ fn test_gen() {
             Token::Spaces(0,1),
         ])));
         
-    assert_eq!(gen.next(), Some((
-        "//".to_string(), vec![
-            Token::Comment(0,2),
-        ])));
     assert_eq!(gen.next(), Some((
         "  ".to_string(), vec![
             Token::Spaces(0,2),
