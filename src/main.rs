@@ -6,9 +6,12 @@ mod scanner;
 use syntax::Token;
 
 fn main() {
-    
+    test();
+}
+
+fn test() {
     let mut i = 0;
-    for (src,expected) in genlex::new().take(121) {
+    for (src,expected) in genlex::new().take(10_000) {
         i += 1;
         print!("testing source {}: {:?}",i,src);
         let result = scanner::scan(&src);
@@ -21,6 +24,4 @@ fn main() {
             break;
         }
     }
-    
 }
-

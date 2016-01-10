@@ -7,6 +7,7 @@ fn test_trivial(){
     assert_eq!(scan(" \n\t"), vec![Token::Spaces(0,3)]);
     assert_eq!(scan("//x"), vec![Token::Comment(0,3)]);
     assert_eq!(scan("// one"), vec![Token::Comment(0,6)]);
+    assert_eq!(scan("/* \n*/"), vec![Token::Comment(0,6)]);
 }
 
 #[test]
@@ -40,6 +41,7 @@ pub fn scan(source : &str) -> Vec<Token> {
     
         state.scan_spaces();
         state.scan_comment_monoline();
+        state.scan_comment_multiline();
         
         if state.token == Token::Error {
             return res
@@ -85,10 +87,55 @@ impl<'a> ScannerState<'a> {
         }
     }
     
+    fn scan_comment_multiline(&mut self){
+        let mut x = self.i;
+        let mut iter = self.source.chars();
+        if iter.nth(x) == Some('/') &&
+           iter.next() == Some('*') {
+            x += 2;
+            'outer: loop {
+                match iter.next() {
+                    Some('*') => {
+                        x += 1;
+                        'inner: loop {
+                            match iter.next() {
+                                Some('/') => {
+                                    x += 1;
+                                    break 'outer;
+                                },
+                                Some('*') => {
+                                    x += 1;
+                                    continue 'inner;
+                                },
+                                Some(_) => {
+                                    x += 1;
+                                    continue 'outer;
+                                },
+                                None => {
+                                    break 'outer;
+                                },
+                            }
+                        }
+                    },
+                    Some(_) => {
+                        x += 1;
+                        continue 'outer;
+                    },
+                    None => {
+                        break 'outer;
+                    },
+                }
+            }
+        }
+        if self.j < x {
+            self.j = x;
+            self.token = Token::Comment(self.i, x)
+        }
+    }
+    
 }
 
 
-// TODO scan_comment_multiline
 // TODO scan_number
 // TODO scan_identifier
 // TODO scan_keyword

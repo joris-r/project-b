@@ -7,6 +7,7 @@ const SPACES_CYCLE : [char; 3] = ['\n', '\t', ' '];
 pub enum GenToken {
     Spaces(String),
     CommentMono(String),
+    CommentMulti(String),
 }
 
 pub struct LexGen {
@@ -29,6 +30,7 @@ fn length_token(token : &GenToken) -> usize{
     match token {
         &GenToken::Spaces(ref s) => s.len(),
         &GenToken::CommentMono(ref s) => "//".len() + s.len(),
+        &GenToken::CommentMulti(ref s) => "/*".len() + s.len() + "*/".len(),
     }
 }
 
@@ -64,6 +66,18 @@ impl LexGen {
                         new.push(GenToken::Spaces("\n".to_string()));
                         self.list.push(new);
                         
+                        let mut new = elem.clone();
+                        new.push(GenToken::CommentMulti("".to_string()));
+                        self.list.push(new);
+                        
+                        let mut new = elem.clone();
+                        new.push(GenToken::CommentMulti("B".to_string()));
+                        self.list.push(new);
+                        
+                        let mut new = elem.clone();
+                        new.push(GenToken::CommentMulti("/*".to_string()));
+                        self.list.push(new);
+                        
                         continue;
                     }
                 }
@@ -81,6 +95,7 @@ fn generate(res : &Vec<GenToken>) -> (String, Vec<Token>) {
     
     for t in res.clone() {
         match t {
+        
             GenToken::Spaces(s) => {
                 res_str.push_str(&s);
                 match res_tok.last() {
@@ -95,6 +110,7 @@ fn generate(res : &Vec<GenToken>) -> (String, Vec<Token>) {
                 }
                 before = res_str.len();
             }
+            
             GenToken::CommentMono(s) => {
                 res_str.push_str("//");
                 res_str.push_str(&s);
@@ -102,6 +118,16 @@ fn generate(res : &Vec<GenToken>) -> (String, Vec<Token>) {
                 res_tok.push( Token::Comment(before, len) );
                 before = len;
             }
+            
+            GenToken::CommentMulti(s) => {
+                res_str.push_str("/*");
+                res_str.push_str(&s);
+                res_str.push_str("*/");
+                let len = res_str.len();
+                res_tok.push( Token::Comment(before, len) );
+                before = len;
+            }
+            
         }
     }
     
