@@ -8,6 +8,7 @@ fn test_trivial(){
     assert_eq!(scan("//x"), vec![Token::Comment(0,3)]);
     assert_eq!(scan("// one"), vec![Token::Comment(0,6)]);
     assert_eq!(scan("/* \n*/"), vec![Token::Comment(0,6)]);
+    assert_eq!(scan("123"), vec![Token::Integer(0,3)]);
 }
 
 #[test]
@@ -42,6 +43,7 @@ pub fn scan(source : &str) -> Vec<Token> {
         state.scan_spaces();
         state.scan_comment_monoline();
         state.scan_comment_multiline();
+        state.scan_integer();
         
         if state.token == Token::Error {
             return res
@@ -133,6 +135,21 @@ impl<'a> ScannerState<'a> {
         }
     }
     
+    fn scan_integer(&mut self){
+        let mut x = self.i;
+        loop {
+            match self.source.chars().nth(x) {
+                Some('0' ... '9') => x += 1,
+                Some(_) => break,
+                _ => break,
+            }
+        }
+        if self.j < x {
+            self.j = x;
+            self.token = Token::Integer(self.i, x)
+        }
+    }
+
 }
 
 
