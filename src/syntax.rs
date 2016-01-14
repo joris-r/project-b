@@ -5,6 +5,7 @@ pub enum Token {
     Spaces(usize, usize),
     Comment(usize, usize),
     Integer(usize, usize),
+    Float(usize, usize),
     //TODO: use slice instead of a index pair
 }
 
