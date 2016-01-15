@@ -9,6 +9,7 @@ fn test_trivial(){
     assert_eq!(scan("// one"), vec![Token::Comment(0,6)]);
     assert_eq!(scan("/* \n*/"), vec![Token::Comment(0,6)]);
     assert_eq!(scan("123"), vec![Token::Integer(0,3)]);
+    assert_eq!(scan("foo_bar2"), vec![Token::Identifier(0,8)]);
 }
 
 #[test]
@@ -44,6 +45,7 @@ pub fn scan(source : &str) -> Vec<Token> {
         state.scan_comment_monoline();
         state.scan_comment_multiline();
         state.scan_integer();
+        state.scan_identifier();
         
         if state.token == Token::Error {
             return res
@@ -150,11 +152,40 @@ impl<'a> ScannerState<'a> {
         }
     }
 
+    fn scan_identifier(&mut self){
+        let mut x = self.i;
+        let mut iter = self.source.chars().skip(self.i);
+        'outer: loop {
+            match iter.next() {
+                Some(c) if c.is_alphabetic() => {
+                    x += 1;
+                    'inner: loop {
+                        match iter.next() {
+                            Some(c) if c.is_alphabetic() ||
+                                       c.is_numeric() ||
+                                       c == '_' => {
+                                x += 1;
+                                continue 'inner;
+                            },
+                            _ => {
+                                break 'outer;
+                            },
+                        }
+                    }
+                },
+                _ => {
+                    break 'outer
+                },
+            }
+        }
+        if self.j < x {
+            self.j = x;
+            self.token = Token::Identifier(self.i, x)
+        }
+    }
 }
 
 
-// TODO scan_number
-// TODO scan_identifier
 // TODO scan_keyword
 // TODO scan_operator
 

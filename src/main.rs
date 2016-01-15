@@ -3,8 +3,6 @@ mod genlex;
 mod syntax;
 mod scanner;
 
-use syntax::Token;
-
 fn main() {
     test();
 }
