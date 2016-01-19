@@ -8,6 +8,7 @@ pub enum Token {
     Float(usize, usize),
     Identifier(usize, usize),
     Keyword(usize, usize),
+    Operator(usize, usize),
     //TODO: use slice instead of a index pair
 }
 

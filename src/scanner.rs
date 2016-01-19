@@ -13,6 +13,8 @@ fn test_trivial(){
     assert_eq!(scan("foo_bar2"), vec![Token::Identifier(0,8)]);
     assert_eq!(scan("THEN"), vec![Token::Keyword(0,4)]);
     assert_eq!(scan("THENxxx"), vec![Token::Identifier(0,7)]);
+    assert_eq!(scan("-"), vec![Token::Operator(0,1)]);
+    assert_eq!(scan("-->"), vec![Token::Operator(0,3)]);
 }
 
 #[test]
@@ -52,6 +54,9 @@ pub fn scan(source : &str) -> Vec<Token> {
             state.scan_keyword(keyword);
         }
         state.scan_identifier();
+        for operator in ::syntax::OPERATORS.iter() {
+            state.scan_operator(operator);
+        }
         
         if state.token == Token::Error {
             return res
@@ -215,6 +220,25 @@ impl<'a> ScannerState<'a> {
             self.token = Token::Keyword(self.i, x)
         }
     }
+    
+    // TODO factorize with scan_keyword
+    fn scan_operator(&mut self, operator : &str){
+        let mut x = self.i;
+        let iter = self.source.chars().skip(self.i);
+        let ik = operator.chars();
+        for (a,b) in iter.zip(ik) {
+            if a == b {
+                x += 1;
+            } else {
+                break;
+            }
+        }
+        if self.j < x {
+            self.j = x;
+            self.token = Token::Operator(self.i, x)
+        }
+    }
+    
 }
 
 
