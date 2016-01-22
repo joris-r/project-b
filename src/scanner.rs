@@ -18,6 +18,30 @@ fn test_trivial(){
 }
 
 #[test]
+fn test_unicode_1(){
+    // one char and one grapheme
+    
+    let mut reconstruct = "".to_owned();
+    reconstruct.push('é'); // one 
+    assert_eq!("é", reconstruct);
+    
+    assert_eq!(scan("é"), vec![Token::Identifier(0,1)]);
+}
+
+#[test]
+fn test_unicode_2(){
+    // two chars but one graphemes
+    
+    let mut reconstruct = "".to_owned();
+    reconstruct.push('e');
+    reconstruct.push('́');
+    assert_eq!("é", reconstruct);
+    
+    // the result should be 2 chars long
+    assert_eq!(scan("é"), vec![Token::Identifier(0,2)]);
+}
+
+#[test]
 fn test_double(){
     assert_eq!(scan("//xy z\n  "), vec![
         Token::Comment(0,6),
