@@ -2,3 +2,7 @@
 name = "pjrb"
 version = "0.1.0"
 authors = ["joris"]
+
+[dependencies]
+unicode-normalization = ">= 0.1.2"
+unicode-segmentation = ">= 0.1.2"

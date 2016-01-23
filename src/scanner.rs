@@ -18,6 +18,18 @@ fn test_trivial(){
 }
 
 #[test]
+fn test_double(){
+    assert_eq!(scan("//xy z\n  "), vec![
+        Token::Comment(0,6),
+        Token::Spaces(6,9),
+    ]);
+    assert_eq!(scan("\n  //xy z"), vec![
+        Token::Spaces(0,3),
+        Token::Comment(3,9),
+    ]);
+}
+
+#[test]
 fn test_unicode_1(){
     // one char and one grapheme
     
@@ -38,19 +50,32 @@ fn test_unicode_2(){
     assert_eq!("é", reconstruct);
     
     // the result should be 2 chars long
+    // (if we consider composite char as legal string for identifier)
     assert_eq!(scan("é"), vec![Token::Identifier(0,2)]);
 }
 
 #[test]
-fn test_double(){
-    assert_eq!(scan("//xy z\n  "), vec![
-        Token::Comment(0,6),
-        Token::Spaces(6,9),
-    ]);
-    assert_eq!(scan("\n  //xy z"), vec![
-        Token::Spaces(0,3),
-        Token::Comment(3,9),
-    ]);
+fn test_unicode_normalisation(){
+    use unicode_normalization::UnicodeNormalization;
+
+    let mut composite = "".to_owned();
+    composite.push('e');
+    composite.push('́');
+    
+    assert!("é" != composite); // one grapheme
+    assert!("é" == composite); // two graphemes
+    
+    let normalized : String = composite.nfc().collect();
+    
+    assert!("é" == normalized); // one grapheme
+    assert!("é" != normalized); // two graphemes
+    
+}
+
+#[test]
+fn test_unicode_alphab(){
+    // composable char are not alphabetic ...
+    assert!( ! '́'.is_alphabetic())
 }
 
 struct ScannerState<'a> {

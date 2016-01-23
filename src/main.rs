@@ -1,4 +1,10 @@
 
+extern crate unicode_normalization;
+
+// the trait 'nfc' and other
+use unicode_normalization::UnicodeNormalization;
+
+
 mod genlex;
 mod syntax;
 mod scanner;
