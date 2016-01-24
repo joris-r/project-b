@@ -2,13 +2,13 @@
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Token<'a> {
     Error,
-    Spaces(usize, usize, &'a str),
-    Comment(usize, usize, &'a str),
-    Integer(usize, usize, &'a str),
-    Float(usize, usize, &'a str),
-    Identifier(usize, usize, &'a str),
-    Keyword(usize, usize, &'a str),
-    Operator(usize, usize, &'a str),
+    Spaces(&'a str),
+    Comment(&'a str),
+    Integer(&'a str),
+    Float(&'a str),
+    Identifier(&'a str),
+    Keyword(&'a str),
+    Operator(&'a str),
 }
 
 pub const KEYWORDS : [&'static str; 16] = [

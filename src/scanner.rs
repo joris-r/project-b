@@ -3,29 +3,29 @@ use syntax::Token;
 
 #[test]
 fn test_trivial(){
-    assert_eq!(scan(" "), vec![Token::Spaces(0,1, " ")]);
-    assert_eq!(scan(" \n\t"), vec![Token::Spaces(0,3, " \n\t")]);
-    assert_eq!(scan("//x"), vec![Token::Comment(0,3, "//x")]);
-    assert_eq!(scan("// one"), vec![Token::Comment(0,6, "// one")]);
-    assert_eq!(scan("/* \n*/"), vec![Token::Comment(0,6, "/* \n*/")]);
-    assert_eq!(scan("123"), vec![Token::Integer(0,3, "123")]);
-    assert_eq!(scan("123.456"), vec![Token::Float(0,7, "123.456")]);
-    assert_eq!(scan("foo_bar2"), vec![Token::Identifier(0,8, "foo_bar2")]);
-    assert_eq!(scan("THEN"), vec![Token::Keyword(0,4,"THEN")]);
-    assert_eq!(scan("THENxxx"), vec![Token::Identifier(0,7, "THENxxx")]);
-    assert_eq!(scan("-"), vec![Token::Operator(0,1,"-")]);
-    assert_eq!(scan("-->"), vec![Token::Operator(0,3,"-->")]);
+    assert_eq!(scan(" "), vec![Token::Spaces(" ")]);
+    assert_eq!(scan(" \n\t"), vec![Token::Spaces(" \n\t")]);
+    assert_eq!(scan("//x"), vec![Token::Comment("//x")]);
+    assert_eq!(scan("// one"), vec![Token::Comment("// one")]);
+    assert_eq!(scan("/* \n*/"), vec![Token::Comment("/* \n*/")]);
+    assert_eq!(scan("123"), vec![Token::Integer("123")]);
+    assert_eq!(scan("123.456"), vec![Token::Float("123.456")]);
+    assert_eq!(scan("foo_bar2"), vec![Token::Identifier("foo_bar2")]);
+    assert_eq!(scan("THEN"), vec![Token::Keyword("THEN")]);
+    assert_eq!(scan("THENxxx"), vec![Token::Identifier("THENxxx")]);
+    assert_eq!(scan("-"), vec![Token::Operator("-")]);
+    assert_eq!(scan("-->"), vec![Token::Operator("-->")]);
 }
 
 #[test]
 fn test_double(){
     assert_eq!(scan("//xy z\n  "), vec![
-        Token::Comment(0,6, "//xy z"),
-        Token::Spaces(6,9, "\n  "),
+        Token::Comment("//xy z"),
+        Token::Spaces("\n  "),
     ]);
     assert_eq!(scan("\n  //xy z"), vec![
-        Token::Spaces(0,3, "\n  "),
-        Token::Comment(3,9, "//xy z"),
+        Token::Spaces("\n  "),
+        Token::Comment("//xy z"),
     ]);
 }
 
@@ -37,7 +37,7 @@ fn test_unicode_1(){
     reconstruct.push('é'); // one 
     assert_eq!("é", reconstruct);
     
-    assert_eq!(scan("é"), vec![Token::Identifier(0,1,"é")]);
+    assert_eq!(scan("é"), vec![Token::Identifier("é")]);
 }
 
 #[test]
@@ -51,7 +51,7 @@ fn test_unicode_2(){
     
     // the result should be 2 chars long
     // (if we consider composite char as legal string for identifier)
-    //assert_eq!(scan("é"), vec![Token::Identifier(0,2,"é")]);
+    //assert_eq!(scan("é"), vec![Token::Identifier("é")]);
     // TODO doesn't work for the moment
 }
 
@@ -142,7 +142,7 @@ impl<'a> ScannerState<'a> {
             self.j = x;
             self.size_right = new_right;
             let content = &self.source[self.size_left..self.size_right];
-            self.token = Token::Spaces(self.i, x, content);
+            self.token = Token::Spaces(content);
         }
     }
 
@@ -168,7 +168,7 @@ impl<'a> ScannerState<'a> {
             self.j = x;
             self.size_right = new_right;
             let content = &self.source[self.size_left..self.size_right];
-            self.token = Token::Comment(self.i, x, content);
+            self.token = Token::Comment(content);
         }
     }
     
@@ -223,7 +223,7 @@ impl<'a> ScannerState<'a> {
             self.j = x;
             self.size_right = new_right;
             let content = &self.source[self.size_left..self.size_right];
-            self.token = Token::Comment(self.i, x, content)
+            self.token = Token::Comment(content)
         }
     }
     
@@ -250,9 +250,9 @@ impl<'a> ScannerState<'a> {
             self.size_right = new_right;
             let content = &self.source[self.size_left..self.size_right];
             if float {
-                self.token = Token::Float(self.i, x, content)
+                self.token = Token::Float(content)
             } else {
-                self.token = Token::Integer(self.i, x, content)
+                self.token = Token::Integer(content)
             }
         }
     }
@@ -290,7 +290,7 @@ impl<'a> ScannerState<'a> {
             self.j = x;
             self.size_right = new_right;
             let content = &self.source[self.size_left..self.size_right];
-            self.token = Token::Identifier(self.i, x, content)
+            self.token = Token::Identifier(content)
         }
     }
     
@@ -311,7 +311,7 @@ impl<'a> ScannerState<'a> {
             self.j = x;
             self.size_right = new_right;
             let content = &self.source[self.size_left..self.size_right];
-            self.token = Token::Keyword(self.i, x, content)
+            self.token = Token::Keyword(content)
         }
     }
     
@@ -333,7 +333,7 @@ impl<'a> ScannerState<'a> {
             self.j = x;
             self.size_right = new_right;
             let content = &self.source[self.size_left..self.size_right];
-            self.token = Token::Operator(self.i, x, content)
+            self.token = Token::Operator(content)
         }
     }
     
