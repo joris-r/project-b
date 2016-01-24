@@ -1,15 +1,14 @@
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Token {
+pub enum Token<'a> {
     Error,
-    Spaces(usize, usize),
-    Comment(usize, usize),
-    Integer(usize, usize),
-    Float(usize, usize),
-    Identifier(usize, usize),
-    Keyword(usize, usize),
-    Operator(usize, usize),
-    //TODO: use slice instead of a index pair
+    Spaces(usize, usize, &'a str),
+    Comment(usize, usize, &'a str),
+    Integer(usize, usize, &'a str),
+    Float(usize, usize, &'a str),
+    Identifier(usize, usize, &'a str),
+    Keyword(usize, usize, &'a str),
+    Operator(usize, usize, &'a str),
 }
 
 pub const KEYWORDS : [&'static str; 16] = [

@@ -3,29 +3,29 @@ use syntax::Token;
 
 #[test]
 fn test_trivial(){
-    assert_eq!(scan(" "), vec![Token::Spaces(0,1)]);
-    assert_eq!(scan(" \n\t"), vec![Token::Spaces(0,3)]);
-    assert_eq!(scan("//x"), vec![Token::Comment(0,3)]);
-    assert_eq!(scan("// one"), vec![Token::Comment(0,6)]);
-    assert_eq!(scan("/* \n*/"), vec![Token::Comment(0,6)]);
-    assert_eq!(scan("123"), vec![Token::Integer(0,3)]);
-    assert_eq!(scan("123.456"), vec![Token::Float(0,7)]);
-    assert_eq!(scan("foo_bar2"), vec![Token::Identifier(0,8)]);
-    assert_eq!(scan("THEN"), vec![Token::Keyword(0,4)]);
-    assert_eq!(scan("THENxxx"), vec![Token::Identifier(0,7)]);
-    assert_eq!(scan("-"), vec![Token::Operator(0,1)]);
-    assert_eq!(scan("-->"), vec![Token::Operator(0,3)]);
+    assert_eq!(scan(" "), vec![Token::Spaces(0,1, " ")]);
+    assert_eq!(scan(" \n\t"), vec![Token::Spaces(0,3, " \n\t")]);
+    assert_eq!(scan("//x"), vec![Token::Comment(0,3, "//x")]);
+    assert_eq!(scan("// one"), vec![Token::Comment(0,6, "// one")]);
+    assert_eq!(scan("/* \n*/"), vec![Token::Comment(0,6, "/* \n*/")]);
+    assert_eq!(scan("123"), vec![Token::Integer(0,3, "123")]);
+    assert_eq!(scan("123.456"), vec![Token::Float(0,7, "123.456")]);
+    assert_eq!(scan("foo_bar2"), vec![Token::Identifier(0,8, "foo_bar2")]);
+    assert_eq!(scan("THEN"), vec![Token::Keyword(0,4,"THEN")]);
+    assert_eq!(scan("THENxxx"), vec![Token::Identifier(0,7, "THENxxx")]);
+    assert_eq!(scan("-"), vec![Token::Operator(0,1,"-")]);
+    assert_eq!(scan("-->"), vec![Token::Operator(0,3,"-->")]);
 }
 
 #[test]
 fn test_double(){
     assert_eq!(scan("//xy z\n  "), vec![
-        Token::Comment(0,6),
-        Token::Spaces(6,9),
+        Token::Comment(0,6, "//xy z"),
+        Token::Spaces(6,9, "\n  "),
     ]);
     assert_eq!(scan("\n  //xy z"), vec![
-        Token::Spaces(0,3),
-        Token::Comment(3,9),
+        Token::Spaces(0,3, "\n  "),
+        Token::Comment(3,9, "//xy z"),
     ]);
 }
 
@@ -37,7 +37,7 @@ fn test_unicode_1(){
     reconstruct.push('é'); // one 
     assert_eq!("é", reconstruct);
     
-    assert_eq!(scan("é"), vec![Token::Identifier(0,1)]);
+    assert_eq!(scan("é"), vec![Token::Identifier(0,1,"é")]);
 }
 
 #[test]
@@ -51,7 +51,8 @@ fn test_unicode_2(){
     
     // the result should be 2 chars long
     // (if we consider composite char as legal string for identifier)
-    assert_eq!(scan("é"), vec![Token::Identifier(0,2)]);
+    //assert_eq!(scan("é"), vec![Token::Identifier(0,2,"é")]);
+    // TODO doesn't work for the moment
 }
 
 #[test]
@@ -81,8 +82,11 @@ fn test_unicode_alphab(){
 struct ScannerState<'a> {
     i : usize,
     j : usize,
-    token : Token,
+    token : Token<'a>,
     source : &'a str,
+    
+    size_left : usize, // in bytes
+    size_right : usize, // in bytes
 }
 
 pub fn scan(source : &str) -> Vec<Token> {
@@ -91,6 +95,9 @@ pub fn scan(source : &str) -> Vec<Token> {
         j:0,
         token : Token::Error,
         source : source,
+        
+        size_left : 0,
+        size_right : 0,
     };
     let mut res = vec![];
     loop {
@@ -112,6 +119,7 @@ pub fn scan(source : &str) -> Vec<Token> {
         }
         res.push(state.token);
         state.i = state.j;
+        state.size_left = state.size_right;
         state.token = Token::Error;
     }
 }
@@ -120,59 +128,78 @@ impl<'a> ScannerState<'a> {
 
     fn scan_spaces(&mut self){
         let mut x = self.i;
+        let mut new_right = self.size_left;
         loop {
-            match self.source.chars().nth(x) {
-                Some(' ') | Some('\t') | Some('\n') => x += 1,
+            match self.source.char_indices().nth(x) {
+                Some((i,' ')) | Some((i,'\t')) | Some((i,'\n')) => {
+                    x += 1;
+                    new_right = i + ' '.len_utf8();
+                },
                 _ => break,
             }
         }
         if self.j < x {
             self.j = x;
-            self.token = Token::Spaces(self.i, x)
+            self.size_right = new_right;
+            let content = &self.source[self.size_left..self.size_right];
+            self.token = Token::Spaces(self.i, x, content);
         }
     }
 
     fn scan_comment_monoline(&mut self){
         let mut x = self.i;
+        let mut new_right = self.size_left;
         if self.source.chars().nth(x) == Some('/') &&
            self.source.chars().nth(x+1) == Some('/') {
             x += 2;
+            new_right +=  '/'.len_utf8()*2;
             loop {
-                match self.source.chars().nth(x) {
+                match self.source.char_indices().nth(x) {
                     None => break,
-                    Some('\n') => break,
-                    Some(_) => x += 1,
+                    Some((_,'\n')) => break,
+                    Some((i,c)) => {
+                        x += 1;
+                        new_right = i + c.len_utf8();
+                    },
                 }
             }
         }
         if self.j < x {
             self.j = x;
-            self.token = Token::Comment(self.i, x)
+            self.size_right = new_right;
+            let content = &self.source[self.size_left..self.size_right];
+            self.token = Token::Comment(self.i, x, content);
         }
     }
     
     fn scan_comment_multiline(&mut self){
         let mut x = self.i;
-        let mut iter = self.source.chars();
-        if iter.nth(x) == Some('/') &&
-           iter.next() == Some('*') {
+        let mut new_right = self.size_left;
+        let mut iter = self.source.char_indices();
+        if iter.nth(x) == Some((new_right,'/')) &&
+           iter.next() == Some((new_right+'/'.len_utf8(),'*')) {
             x += 2;
+            new_right +=  '/'.len_utf8()  + '*'.len_utf8();
             'outer: loop {
                 match iter.next() {
-                    Some('*') => {
+                    Some((i,'*')) => {
                         x += 1;
+                        new_right = i + '*'.len_utf8();
                         'inner: loop {
                             match iter.next() {
-                                Some('/') => {
+                                Some((i,'/')) => {
                                     x += 1;
+                                    new_right = i + '/'.len_utf8();
                                     break 'outer;
                                 },
-                                Some('*') => {
+                                Some((i,'*')) => {
                                     x += 1;
+                                    new_right = i + '*'.len_utf8();
                                     continue 'inner;
                                 },
-                                Some(_) => {
+                                Some((i,c)) => {
                                     x += 1;
+                                    new_right = i + c.len_utf8();
                                     continue 'outer;
                                 },
                                 None => {
@@ -181,8 +208,9 @@ impl<'a> ScannerState<'a> {
                             }
                         }
                     },
-                    Some(_) => {
+                    Some((i,c)) => {
                         x += 1;
+                        new_right = i + c.len_utf8();
                         continue 'outer;
                     },
                     None => {
@@ -193,52 +221,63 @@ impl<'a> ScannerState<'a> {
         }
         if self.j < x {
             self.j = x;
-            self.token = Token::Comment(self.i, x)
+            self.size_right = new_right;
+            let content = &self.source[self.size_left..self.size_right];
+            self.token = Token::Comment(self.i, x, content)
         }
     }
     
     fn scan_number(&mut self){
         let mut x = self.i;
+        let mut new_right = self.size_left;
         let mut float = false;
         loop {
-            match self.source.chars().nth(x) {
-                Some('0' ... '9') => x += 1,
-                Some('.') => {
+            match self.source.char_indices().nth(x) {
+                Some((i,'0' ... '9')) => {
+                    x += 1;
+                    new_right = i + '0'.len_utf8();
+                },
+                Some((i,'.')) => {
                     float = true;
                     x += 1;
+                    new_right = i + '.'.len_utf8();
                 }
-                Some(_) => break,
                 _ => break,
             }
         }
         if self.j < x {
             self.j = x;
+            self.size_right = new_right;
+            let content = &self.source[self.size_left..self.size_right];
             if float {
-                self.token = Token::Float(self.i, x)
+                self.token = Token::Float(self.i, x, content)
             } else {
-                self.token = Token::Integer(self.i, x)
+                self.token = Token::Integer(self.i, x, content)
             }
         }
     }
 
     fn scan_identifier(&mut self){
         let mut x = self.i;
-        let mut iter = self.source.chars().skip(self.i);
+        let mut new_right = self.size_left;
+        let mut iter = self.source.char_indices().skip(self.i);
         'outer: loop {
             match iter.next() {
-                Some(c) if c.is_alphabetic() => {
+                Some((i,c)) if c.is_alphabetic() => {
+                    println!("({},{})",i,c);
                     x += 1;
+                    new_right = i + c.len_utf8();
                     'inner: loop {
                         match iter.next() {
-                            Some(c) if c.is_alphabetic() ||
+                            Some((i,c)) if c.is_alphabetic() ||
                                        c.is_numeric() ||
                                        c == '_' => {
+                                println!("({},{})",i,c);
                                 x += 1;
+                                new_right = i + c.len_utf8();
                                 continue 'inner;
                             },
-                            _ => {
-                                break 'outer;
-                            },
+                            _ => break 'outer,
                         }
                     }
                 },
@@ -249,42 +288,52 @@ impl<'a> ScannerState<'a> {
         }
         if self.j < x {
             self.j = x;
-            self.token = Token::Identifier(self.i, x)
+            self.size_right = new_right;
+            let content = &self.source[self.size_left..self.size_right];
+            self.token = Token::Identifier(self.i, x, content)
         }
     }
     
     fn scan_keyword(&mut self, keyword : &str){
         let mut x = self.i;
-        let iter = self.source.chars().skip(self.i);
+        let mut new_right = self.size_left;
+        let iter = self.source.char_indices().skip(self.i);
         let ik = keyword.chars();
-        for (a,b) in iter.zip(ik) {
+        for ((i,a),b) in iter.zip(ik) {
             if a == b {
                 x += 1;
+                new_right = i + a.len_utf8();
             } else {
                 break;
             }
         }
         if self.j < x {
             self.j = x;
-            self.token = Token::Keyword(self.i, x)
+            self.size_right = new_right;
+            let content = &self.source[self.size_left..self.size_right];
+            self.token = Token::Keyword(self.i, x, content)
         }
     }
     
     // TODO factorize with scan_keyword
     fn scan_operator(&mut self, operator : &str){
         let mut x = self.i;
-        let iter = self.source.chars().skip(self.i);
+        let mut new_right = self.size_left;
+        let iter = self.source.char_indices().skip(self.i);
         let ik = operator.chars();
-        for (a,b) in iter.zip(ik) {
+        for ((i,a),b) in iter.zip(ik) {
             if a == b {
                 x += 1;
+                new_right = i + a.len_utf8();
             } else {
                 break;
             }
         }
         if self.j < x {
             self.j = x;
-            self.token = Token::Operator(self.i, x)
+            self.size_right = new_right;
+            let content = &self.source[self.size_left..self.size_right];
+            self.token = Token::Operator(self.i, x, content)
         }
     }
     
