@@ -9,6 +9,7 @@ fn test_trivial(){
     assert_eq!(scan("// one"), vec![Token::Comment("// one")]);
     assert_eq!(scan("/* \n*/"), vec![Token::Comment("/* \n*/")]);
     assert_eq!(scan("123"), vec![Token::Integer("123")]);
+    assert_eq!(scan("123."), vec![Token::Float("123.")]);
     assert_eq!(scan("123.456"), vec![Token::Float("123.456")]);
     assert_eq!(scan("foo_bar2"), vec![Token::Identifier("foo_bar2")]);
     assert_eq!(scan("THEN"), vec![Token::Keyword("THEN")]);
@@ -244,6 +245,12 @@ impl<'a> ScannerState<'a> {
                     new_right = i + '0'.len_utf8();
                 },
                 Some((i,'.')) => {
+                    let mut iter_tmp = iter.clone();
+                    // Looking for a '..' operator which can confuse with a float like "1."
+                    match iter_tmp.next() {
+                        Some((_, '.')) => break,
+                        _ => {}
+                    }
                     if float == true { break; }
                     float = true;
                     x += 1;
