@@ -278,7 +278,6 @@ impl<'a> ScannerState<'a> {
         'outer: loop {
             match iter.next() {
                 Some((i,c)) if c.is_alphabetic() => {
-                    println!("({},{})",i,c);
                     x += 1;
                     new_right = i + c.len_utf8();
                     'inner: loop {
@@ -286,7 +285,6 @@ impl<'a> ScannerState<'a> {
                             Some((i,c)) if c.is_alphabetic() ||
                                        c.is_numeric() ||
                                        c == '_' => {
-                                println!("({},{})",i,c);
                                 x += 1;
                                 new_right = i + c.len_utf8();
                                 continue 'inner;

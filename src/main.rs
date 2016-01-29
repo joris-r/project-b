@@ -1,9 +1,7 @@
-
 extern crate unicode_normalization;
 
 use std::path::Path;
 use std::fs::OpenOptions;
-use std::io::BufReader;
 use std::io::prelude::*;
 
 mod syntax;
@@ -20,7 +18,13 @@ fn print_tokens(path: &str) {
     file.read_to_string(&mut source).unwrap();
     
     let tokens = scanner::scan(&source);
-    
+    let tokens = tokens
+        .iter()
+        .filter(|t| match **t {
+            syntax::Token::Spaces(_) => false,
+            _ => true, })
+        .collect::<Vec<&syntax::Token>>();
+
     let sep = std::iter::repeat("=")
         .take(80)
         .collect::<String>();
@@ -28,7 +32,11 @@ fn print_tokens(path: &str) {
     println!("{}:", path.display());
     println!("{}", sep);
     println!("{:?}", tokens);
+    println!("{}", sep);
 
+    for t in tokens {
+        println!("{:?}", t);
+    }
 }
 
 
