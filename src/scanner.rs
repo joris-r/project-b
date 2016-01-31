@@ -24,6 +24,7 @@ fn test_trivial(){
     assert_eq!(scan("// one"), vec![Token::Comment("// one")]);
     assert_eq!(scan("/* \n*/"), vec![Token::Comment("/* \n*/")]);
     assert_eq!(scan("123"), vec![Token::Integer("123")]);
+    assert_eq!(scan("123."), vec![Token::Float("123.")]);
     assert_eq!(scan("123.456"), vec![Token::Float("123.456")]);
     assert_eq!(scan("foo_bar2"), vec![Token::Identifier("foo_bar2")]);
     assert_eq!(scan("THEN"), vec![Token::Keyword("THEN")]);
@@ -92,6 +93,11 @@ fn test_unicode_normalisation(){
 fn test_unicode_alphab(){
     // composable char are not alphabetic ...
     assert!( ! '́'.is_alphabetic())
+}
+
+#[test]
+fn test_composed(){
+    assert_eq!(scan("1..2"), vec![Token::Integer("1"), Token::Operator(".."), Token::Integer("2")]);
 }
 
 struct ScannerState<'a> {
@@ -246,13 +252,21 @@ impl<'a> ScannerState<'a> {
         let mut x = self.i;
         let mut new_right = self.size_left;
         let mut float = false;
+        let mut iter = self.source.char_indices().skip(x);
         loop {
-            match self.source.char_indices().nth(x) {
+            match iter.next() {
                 Some((i,'0' ... '9')) => {
                     x += 1;
                     new_right = i + '0'.len_utf8();
                 },
                 Some((i,'.')) => {
+                    let mut iter_tmp = iter.clone();
+                    // Looking for a '..' operator which can confuse with a float like "1."
+                    match iter_tmp.next() {
+                        Some((_, '.')) => break,
+                        _ => {}
+                    }
+                    if float == true { break; }
                     float = true;
                     x += 1;
                     new_right = i + '.'.len_utf8();
@@ -264,10 +278,10 @@ impl<'a> ScannerState<'a> {
             self.j = x;
             self.size_right = new_right;
             let content = &self.source[self.size_left..self.size_right];
-            if float {
-                self.token = Token::Float(content)
+            self.token = if float {
+                Token::Float(content)
             } else {
-                self.token = Token::Integer(content)
+                Token::Integer(content)
             }
         }
     }
@@ -279,7 +293,6 @@ impl<'a> ScannerState<'a> {
         'outer: loop {
             match iter.next() {
                 Some((i,c)) if c.is_alphabetic() => {
-                    println!("({},{})",i,c);
                     x += 1;
                     new_right = i + c.len_utf8();
                     'inner: loop {
@@ -287,7 +300,6 @@ impl<'a> ScannerState<'a> {
                             Some((i,c)) if c.is_alphabetic() ||
                                        c.is_numeric() ||
                                        c == '_' => {
-                                println!("({},{})",i,c);
                                 x += 1;
                                 new_right = i + c.len_utf8();
                                 continue 'inner;
