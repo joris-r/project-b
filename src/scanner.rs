@@ -1,5 +1,20 @@
 
-use syntax::Token;
+use syntax::{Token, TokensRef};
+
+
+//
+//         Scanner Properties
+//
+// Tokens are a partition of the source
+// tokens are not empty
+// No Consequent Spaces
+// Spaces contains only white spaces
+// Comments either:
+//   - start with "//" contains no '\n' and next token start with '\n';
+//   - or start with "/*" and ends with "*/", contains no inner "*/"
+//     (accept multi-comments inside multi-comment?)
+//
+
 
 #[test]
 fn test_trivial(){
@@ -82,14 +97,14 @@ fn test_unicode_alphab(){
 struct ScannerState<'a> {
     i : usize,
     j : usize,
-    token : Token<'a>,
+    token : Token<&'a str>,
     source : &'a str,
     
     size_left : usize, // in bytes
     size_right : usize, // in bytes
 }
 
-pub fn scan(source : &str) -> Vec<Token> {
+pub fn scan(source : &str) -> TokensRef {
     let mut state = ScannerState{
         i:0,
         j:0,
@@ -338,9 +353,3 @@ impl<'a> ScannerState<'a> {
     }
     
 }
-
-
-
-// TODO scan_operator
-
-

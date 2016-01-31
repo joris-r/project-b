@@ -1,17 +1,23 @@
 
-//
-//         Scanner Properties
-//
-// Tokens are a partition of the source
-// tokens are not empty
-// No Consequent Spaces
-// Spaces contains only white spaces
-// Comments either:
-//   - start with "//" contains no '\n' and next token start with '\n';
-//   - or start with "/*" and ends with "*/", contains no inner "*/"
-//     (accept multi-comments inside multi-comment?)
-//
+use syntax::TokensOwn;
 
+pub struct LexGen {
+    list : Vec<TokensOwn>,
+    size : usize,
+}
 
+pub fn new() -> LexGen {
+    LexGen{
+        list : vec![vec![]],
+        size : 0,
+    }
+}
 
+impl Iterator for LexGen {
+    type Item = TokensOwn;
+    
+    fn next(&mut self) -> Option<TokensOwn> {
+        Some(vec![])
+    }
+}
 
