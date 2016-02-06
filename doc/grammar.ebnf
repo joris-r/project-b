@@ -1,0 +1,75 @@
+model ::=
+    ( 'MACHINE' | 'REFINEMENT' | 'IMPLEMENTATION' ) header statements 'END'
+    
+header ::=
+    identifier paren_ident_list?
+    
+statements ::=
+    ( 'REFINES' | 'CONCRETE_VARIABLES' ) ident_list
+    |
+    ( 'CONSTRAINTS' | 'INVARIANT' ) expression
+    |
+    'INITIALISATION' substitution
+    |
+    'OPERATIONS' operation_list
+    
+operation_list ::=
+    operation ( ';' operation )*
+
+operation ::=
+    ( ident_list '<--' )? identifier paren_ident_list? '=' substitution
+    
+substitution ::=
+    'BEGIN' substitution 'END'
+    |
+    'PRE' expression 'THEN' substitution 'END'
+    |
+    'VAR' ident_list 'IN' substitution 'END'
+    |
+    'WHILE' expression
+    'DO' substitution
+    'INVARIANT' expression
+    'VARIANT' expression
+    'END'
+    |
+    substitution ( ';' | '||' ) substitution
+    |
+    expression ':=' expression
+
+expression ::=
+    identifier
+    |
+    number
+    |
+    identifier '$0'
+    |
+    expression '(' expression ')'
+    |
+    '-' expression
+    |
+    expression bin_op expression
+    |
+    '(' expression ')'
+    |
+    '{' expression '}'
+    |
+    '{' ident_list '|' expression '}'
+    |
+    '%' ( identifier | paren_ident_list )
+        '.' '(' expression '|' expression ')'
+
+bin_op ::=
+    ',' | '|->' | ';'  | ':' | '&' | '<=' | '..' | '<|' | '=' | '-' | '+' |
+    '\/' 
+    
+paren_ident_list ::=
+    '(' ident_list ')'
+
+ident_list ::=
+    identifier ( ',' identifier )*
+    
+identifier ::=
+    letter ( letter | digit | '_' )*
+    
+number ::=
+    digit+ ( '.' digit+ )?
