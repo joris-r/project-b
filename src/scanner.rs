@@ -31,6 +31,7 @@ fn test_trivial(){
     assert_eq!(scan("THENxxx"), vec![Token::Identifier("THENxxx")]);
     assert_eq!(scan("-"), vec![Token::Operator("-")]);
     assert_eq!(scan("-->"), vec![Token::Operator("-->")]);
+    assert_eq!(scan("◦"), vec![Token::Operator("◦")]);
 }
 
 #[test]

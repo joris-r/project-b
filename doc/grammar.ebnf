@@ -51,7 +51,7 @@ expression4 ::= ( expression4 ( ',' ) )? expression5
 
 expression5 ::= ( expression5 ( '-->' ) )? expression6
 
-expression6 ::= ( expression6 ( '|->' | '<|' | '\/' | '°' ) )? expression7
+expression6 ::= ( expression6 ( '|->' | '<|' | '\/' | '◦' ) )? expression7
 
 expression7 ::= ( expression7 ( '..' ) )? expression8
 

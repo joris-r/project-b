@@ -33,12 +33,12 @@ OPERATIONS
     
     shift_right =
     BEGIN
-        arr := (id({1}) \/ %xx.( xx : 2..capacity | xx - 1 ) ; arr)
+        arr := (id({1}) \/ %xx.( xx : 2..capacity | xx - 1 ) ◦ arr)
     END;
     
     shift_left =
     BEGIN
-        arr := (%xx.( xx : 1..capacity-1 | xx + 1 ) \/ id({capacity}) ; arr)
+        arr := (%xx.( xx : 1..capacity-1 | xx + 1 ) \/ id({capacity}) ◦ arr)
     END    
     
 END
