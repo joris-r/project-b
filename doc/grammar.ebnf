@@ -42,7 +42,7 @@ substitution2 ::=
 expression ::=
     ( '-' | 'not' ) expression
     |
-    expression '(' expression ')'
+    expression expression
     |
     ( expression ( '<=>' | '=>' ) )? expression2
     
