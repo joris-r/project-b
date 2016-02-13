@@ -50,24 +50,22 @@ expression2 ::= ( expression2 ( '&' | 'or' ) )? expression3
 
 expression3 ::= ( expression3 ( ':' | '<=' | '=' ) )? expression4
 
-expression4 ::= ( expression4 ( ',' ) )? expression5
+expression4 ::= ( expression4 ( '-->' ) )? expression5
 
-expression5 ::= ( expression5 ( '-->' ) )? expression6
+expression5 ::= ( expression5 ( '|->' | '<|' | '\/' | '◦' | '×' ) )? expression6
 
-expression6 ::= ( expression6 ( '|->' | '<|' | '\/' | '◦' | '×' ) )? expression7
+expression6 ::= ( expression6 ( '..' ) )? expression7
 
-expression7 ::= ( expression7 ( '..' ) )? expression8
+expression7 ::= ( expression7 ( '+' | '-' ) )? expression8
 
-expression8 ::= ( expression8 ( '+' | '-' ) )? expression9
-
-expression9 ::= ( expression9 ( '·' | '/' | 'mod' ) )? term
+expression8 ::= ( expression8 ( '·' | '/' | 'mod' ) )? term
 
 term ::=
     identifier '$0'?
     |
     number
     |
-    '(' expression ')'
+    '(' expression ( ',' expression )* ')'
     |
     '{' expression '}'
     |
