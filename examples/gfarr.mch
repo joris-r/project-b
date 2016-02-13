@@ -13,7 +13,7 @@ INVARIANT
     arr : 1..capacity --> VALUE
     
 INITIALISATION
-    arr := (1..capacity) * {default_val}
+    arr := (1..capacity) × {default_val}
     
 OPERATIONS
     val <-- get(ind) =
