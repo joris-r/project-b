@@ -57,7 +57,7 @@ expression7 ::= ( expression7 ( '..' ) )? expression8
 
 expression8 ::= ( expression8 ( '+' | '-' ) )? expression9
 
-expression9 ::= ( expression9 ( '*' | '/' | 'mod' ) )? term
+expression9 ::= ( expression9 ( '·' | '/' | 'mod' ) )? term
 
 term ::=
     identifier '$0'?
