@@ -1,4 +1,4 @@
-model ::=
+component ::=
     ( 'MACHINE' | 'REFINEMENT' | 'IMPLEMENTATION' ) header statements 'END'
     
 header ::=
@@ -37,17 +37,32 @@ substitution ::=
     expression ':=' expression
 
 expression ::=
-    identifier
-    |
-    number
-    |
-    identifier '$0'
+    ( '-' | 'not' ) expression
     |
     expression '(' expression ')'
     |
-    '-' expression
+    ( expression ( '<=>' | '=>' ) )? expression2
+    
+expression2 ::= ( expression2 ( '&' | 'or' ) )? expression3
+
+expression3 ::= ( expression3 ( ':' | '<=' | '=' ) )? expression4
+
+expression4 ::= ( expression4 ( ',' ) )? expression5
+
+expression5 ::= ( expression5 ( '-->' ) )? expression6
+
+expression6 ::= ( expression6 ( '|->' | '<|' | '\/' | '°' ) )? expression7
+
+expression7 ::= ( expression7 ( '..' ) )? expression8
+
+expression8 ::= ( expression8 ( '+' | '-' ) )? expression9
+
+expression9 ::= ( expression9 ( '*' | '/' | 'mod' ) )? term
+
+term ::=
+    identifier '$0'?
     |
-    expression bin_op expression
+    number
     |
     '(' expression ')'
     |
@@ -57,10 +72,7 @@ expression ::=
     |
     '%' ( identifier | paren_ident_list )
         '.' '(' expression '|' expression ')'
-
-bin_op ::=
-    ',' | '|->' | ';'  | ':' | '&' | '<=' | '..' | '<|' | '=' | '-' | '+' |
-    '\/' 
+    
     
 paren_ident_list ::=
     '(' ident_list ')'
