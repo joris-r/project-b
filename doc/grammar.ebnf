@@ -20,21 +20,24 @@ operation ::=
     ( ident_list '<--' )? identifier paren_ident_list? '=' substitution
     
 substitution ::=
-    'BEGIN' substitution 'END'
+    'BEGIN' substitution2 'END'
     |
-    'PRE' expression 'THEN' substitution 'END'
+    'PRE' expression 'THEN' substitution2 'END'
     |
-    'VAR' ident_list 'IN' substitution 'END'
+    'VAR' ident_list 'IN' substitution2 'END'
     |
     'WHILE' expression
-    'DO' substitution
+    'DO' substitution2
     'INVARIANT' expression
     'VARIANT' expression
     'END'
-    |
-    substitution ( ';' | '||' ) substitution
+    
+substitution2 ::=
+    substitution2 ( ';' | '||' ) substitution2
     |
     expression ':=' expression
+    |
+    substitution
 
 expression ::=
     ( '-' | 'not' ) expression
