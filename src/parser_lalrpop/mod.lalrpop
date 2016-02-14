@@ -1,0 +1,24 @@
+
+grammar;
+
+pub Component = Header Identifier Statements "END";
+
+Header = { "MACHINE", "REFINEMENT", "IMPLEMENTATION" };
+
+
+Statements = {
+    "VARIABLES" Ident_list,
+};
+
+Ident_list : Vec<&'input str> = {
+    <i:Identifier> "," <l:Ident_list> => {
+        let mut nl = l.clone();
+        nl.push(i);
+        nl
+    },
+    
+    Identifier => vec![<>],
+};
+
+
+Identifier = r"[a-zA-Z][0-9a-zA-Z_-]*";

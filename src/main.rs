@@ -7,10 +7,20 @@ use std::io::prelude::*;
 mod syntax;
 mod scanner;
 mod genlex;
+mod parser_lalrpop;
+
+
+
 
 fn main() {
     print_tokens("examples/gfarr.mch");
     print_tokens("examples/gfarr_i.imp");
+    
+    println!("\n\n-----------------------------------------------");
+    let src = "IMPLEMENTATION imp VARIABLES var1,v2, toto END";
+    let res = parser_lalrpop::parse_Component(src);
+    println!("{:?}",res);
+    
 }
 
 fn print_tokens(path: &str) {

@@ -2,7 +2,12 @@
 name = "pjrb"
 version = "0.1.0"
 authors = ["joris"]
+build = "build.rs"
 
 [dependencies]
 unicode-normalization = ">= 0.1.2"
 unicode-segmentation = ">= 0.1.2"
+lalrpop-util = "0.9.0"
+
+[build-dependencies]
+lalrpop = "0.9.0"
