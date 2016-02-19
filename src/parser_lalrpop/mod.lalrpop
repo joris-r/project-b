@@ -1,24 +1,43 @@
 
+
+
+
 grammar;
 
-pub Component = Header Identifier Statements "END";
 
-Header = { "MACHINE", "REFINEMENT", "IMPLEMENTATION" };
+pub Component = Decl_component Header Statements "END";
+
+Decl_component = { "MACHINE", "REFINEMENT", "IMPLEMENTATION" };
+
+Header = Identifier Paren_ident_list?;
 
 
-Statements = {
-    "VARIABLES" Ident_list,
+Statements = Statement*;
+
+Statement = {
+    "REFINES" Ident_list,
+    "CONCRETE_VARIABLES" Ident_list,
+    "CONSTRAINTS" Ident_list,
+    "INVARIANT" Ident_list,
+    "INITIALISATION" Ident_list,
+    "OPERATIONS" Ident_list,
 };
 
-Ident_list : Vec<&'input str> = {
-    <i:Identifier> "," <l:Ident_list> => {
-        let mut nl = l.clone();
-        nl.push(i);
-        nl
-    },
-    
-    Identifier => vec![<>],
-};
+Paren_ident_list = "(" <Ident_list> ")"  ;
 
+pub Ident_list = ListSep<Identifier,",">;
+
+ListSep<T,S>: Vec<T> = {
+    <v:(<T> S)*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            let mut v = v;
+            v.push(e);
+            v
+        }
+    }
+};
 
 Identifier = r"[a-zA-Z][0-9a-zA-Z_-]*";
+
+Number = r"[0-9]+([.][0-9]+)";

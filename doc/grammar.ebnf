@@ -4,7 +4,10 @@ component ::=
 header ::=
     identifier paren_ident_list?
     
-statements ::=
+statements ::= statement*
+
+
+statement ::=
     ( 'REFINES' | 'CONCRETE_VARIABLES' ) ident_list
     |
     ( 'CONSTRAINTS' | 'INVARIANT' ) expression

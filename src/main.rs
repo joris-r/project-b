@@ -17,7 +17,7 @@ fn main() {
     print_tokens("examples/gfarr_i.imp");
     
     println!("\n\n-----------------------------------------------");
-    let src = "IMPLEMENTATION imp VARIABLES var1,v2, toto END";
+    let src = "IMPLEMENTATION imp CONCRETE_VARIABLES var1,v2, toto END";
     let res = parser_lalrpop::parse_Component(src);
     println!("{:?}",res);
     
