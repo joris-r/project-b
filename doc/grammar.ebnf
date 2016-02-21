@@ -43,10 +43,6 @@ substitution2 ::=
     substitution
 
 expression ::=
-    ( '-' | 'not' ) expression
-    |
-    expression expression
-    |
     ( expression ( '<=>' | '=>' ) )? expression2
     
 expression2 ::= ( expression2 ( '&' | 'or' ) )? expression3
@@ -61,16 +57,20 @@ expression6 ::= ( expression6 ( '..' ) )? expression7
 
 expression7 ::= ( expression7 ( '+' | '-' ) )? expression8
 
-expression8 ::= ( expression8 ( '·' | '/' | 'mod' ) )? term
+expression8 ::= ( expression8 ( '·' | '/' | 'mod' ) )? expression9
 
-term ::=
+expression9 ::= ( '-' | 'not' )* expression10
+
+expression10 ::= expression10? expression11
+
+expression11 ::=
     identifier '$0'?
     |
     number
     |
     '(' expression ( ',' expression )* ')'
     |
-    '{' expression '}'
+    '{' expression ( ',' expression )* '}'
     |
     '{' ident_list '|' expression '}'
     |

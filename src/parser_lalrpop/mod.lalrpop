@@ -1,9 +1,5 @@
 
-
-
-
 grammar;
-
 
 pub Component = Decl_component Header Statements "END";
 
@@ -11,21 +7,135 @@ Decl_component = { "MACHINE", "REFINEMENT", "IMPLEMENTATION" };
 
 Header = Identifier Paren_ident_list?;
 
-
 Statements = Statement*;
 
 Statement = {
     "REFINES" Ident_list,
     "CONCRETE_VARIABLES" Ident_list,
-    "CONSTRAINTS" Ident_list,
-    "INVARIANT" Ident_list,
-    "INITIALISATION" Ident_list,
-    "OPERATIONS" Ident_list,
+    "CONSTRAINTS" Expression,
+    "INVARIANT" Expression,
+    "INITIALISATION" Substitution,
+    "OPERATIONS" Operation_list,
 };
+
+Operation_list = Dummy<Operation,";">;
+
+Operation = (Ident_list "<--")? <Identifier> Paren_ident_list? "=" Substitution;
+
+Substitution = {
+    "BEGIN" <Substitution2> "END",
+    "PRE" Expression "THEN" <Substitution2> "END",
+    "VAR" Ident_list "IN" <Substitution2> "END",
+    "WHILE" Expression "DO" <Substitution2>
+                       "INVARIANT" Expression
+                       "VARIANT" Expression
+                       "END",
+};
+
+Substitution2 = {
+    Substitution2 ";" <Substitution3>,
+    Substitution2 "||" <Substitution3>,
+    <Substitution3>,
+};
+
+Substitution3 = {
+    Expression ":=" <Expression>,
+    <Substitution>,
+};
+
+Expression = {
+    Expression "<=>" <Expression2>,
+    Expression "=>" <Expression2>,
+    <Expression2>,
+};
+
+Expression2 = {
+    Expression2 "&" <Expression3>,
+    Expression2 "or" <Expression3>,
+    <Expression3>,
+};
+
+Expression3 = {
+    Expression3 ":" <Expression4>,
+    Expression3 "<=" <Expression4>,
+    Expression3 "=" <Expression4>,
+    <Expression4>,
+};
+
+Expression4 = {
+    Expression4 "-->" <Expression5>,
+    <Expression5>,
+};
+
+Expression5 = {
+    Expression5 "<|" <Expression6>,
+    Expression5 r"\/" <Expression6>,
+    Expression5 "◦" <Expression6>,
+    Expression5 "×" <Expression6>,
+    <Expression6>,
+};
+
+Expression6 = {
+    Expression6 ".." <Expression7>,
+    <Expression7>,
+};
+
+Expression7 = {
+    Expression7 "+" <Expression8>,
+    Expression7 "-" <Expression8>,
+    <Expression8>,
+};
+
+Expression8 = {
+    Expression8 "·" <Expression9>,
+    Expression8 "/" <Expression9>,
+    Expression8 "mod" <Expression9>,
+    <Expression9>,
+};
+
+Expression9 = {
+    "-" <Expression9>,
+    "not" <Expression9>,
+    <Expression10>,
+};
+
+Expression10 = {
+    Expression10 <Expression11>,
+    <Expression11>,
+};
+
+Expression11 = {
+    <Identifier> "$0"?,
+    <Number>,
+    "(" <Comma_sep_expr> ")",
+    "{" <Comma_sep_expr> "}",
+    "%" Ident_or_paren_ident_list "." "(" Expression "|" <Expression> ")",
+};
+
+Comma_sep_expr = Dummy<Expression,",">;
+
+Ident_or_paren_ident_list = { Identifier, Paren_ident_list };
 
 Paren_ident_list = "(" <Ident_list> ")"  ;
 
-pub Ident_list = ListSep<Identifier,",">;
+Ident_list = Dummy<Identifier,",">;
+
+Identifier = r"[a-zA-Z][0-9a-zA-Z_-]*";
+
+Number = r"[0-9]+([.][0-9]+)?";
+
+
+
+// Macro -----------------------------------
+
+Dummy<T,S>: T = {
+    <v:(<T> S)*> <e:T?> => match e {
+        None => "dummy",
+        Some(e) => {
+            e
+        }
+    }
+};
 
 ListSep<T,S>: Vec<T> = {
     <v:(<T> S)*> <e:T?> => match e {
@@ -37,7 +147,3 @@ ListSep<T,S>: Vec<T> = {
         }
     }
 };
-
-Identifier = r"[a-zA-Z][0-9a-zA-Z_-]*";
-
-Number = r"[0-9]+([.][0-9]+)";
