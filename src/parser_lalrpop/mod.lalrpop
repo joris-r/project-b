@@ -1,60 +1,73 @@
 
-grammar;
+grammar<'input>(text: &'input str)["LALR(1)"];
 
+use syntax::Token;
 
 extern {
-    enum Tok {
-        "MACHINE"            syntax::Token<&'input str>::Keyword(),
-        "IMPLEMENTATION"     syntax::Token<&'input str>::Keyword(),
-        "CONSTRAINTS"        syntax::Token<&'input str>::Keyword(),
-        "CONCRETE_VARIABLES" syntax::Token<&'input str>::Keyword(),
-        "INVARIANT"          syntax::Token<&'input str>::Keyword(),
-        "INITIALISATION"     syntax::Token<&'input str>::Keyword(),
-        "OPERATIONS"         syntax::Token<&'input str>::Keyword(),
-        "END"                syntax::Token<&'input str>::Keyword(),
-        "PRE"                syntax::Token<&'input str>::Keyword(),
-        "THEN"               syntax::Token<&'input str>::Keyword(),
-        "VAR"                syntax::Token<&'input str>::Keyword(),
-        "IN"                 syntax::Token<&'input str>::Keyword(),
-        "WHILE"              syntax::Token<&'input str>::Keyword(),
-        "DO"                 syntax::Token<&'input str>::Keyword(),
-        "INVARIANT"          syntax::Token<&'input str>::Keyword(),
-        "VARIANT"            syntax::Token<&'input str>::Keyword(),
-        "("                  syntax::Token<&'input str>::,
-        ")"                  syntax::Token<&'input str>::,
-        "{"                  syntax::Token<&'input str>::,
-        "}"                  syntax::Token<&'input str>::,
-        "["                  syntax::Token<&'input str>::,
-        "]"                  syntax::Token<&'input str>::,
-        ","                  syntax::Token<&'input str>::,
-        ":"                  syntax::Token<&'input str>::,
-        "&"                  syntax::Token<&'input str>::,
-        ".."                 syntax::Token<&'input str>::,
-        "-->"                syntax::Token<&'input str>::,
-        ":="                 syntax::Token<&'input str>::,
-        "<--"                syntax::Token<&'input str>::,
-        "="                  syntax::Token<&'input str>::,
-        ";"                  syntax::Token<&'input str>::,
-        "◦"                  syntax::Token<&'input str>::,
-        "×"                  syntax::Token<&'input str>::,
-        "\\/"                syntax::Token<&'input str>::,
-        "/\\"                syntax::Token<&'input str>::,
-        "%"                  syntax::Token<&'input str>::,
-        "|"                  syntax::Token<&'input str>::,
-        "-"                  syntax::Token<&'input str>::,
-        "+"                  syntax::Token<&'input str>::,
-        "·"                  syntax::Token<&'input str>::,
-        "/"                  syntax::Token<&'input str>::,
-        "<|"                 syntax::Token<&'input str>::,
-        Identifier           syntax::Token<&'input str>::,
-        Number               syntax::Token<&'input str>::,
+    enum Token<'input> {
+        "MACHINE"            => Token::KwMachine,
+        "IMPLEMENTATION"     => Token::KwImplementation,
+        "CONSTRAINTS"        => Token::KwConstraints,
+        "REFINES"            => Token::KwRefines,
+        "CONCRETE_VARIABLES" => Token::KwConcreteVariables,
+        "INVARIANT"          => Token::KwInvariant,
+        "INITIALISATION"     => Token::KwInitialisation,
+        "OPERATIONS"         => Token::KwOperations,
+        "BEGIN"              => Token::KwBegin,
+        "END"                => Token::KwEnd,
+        "PRE"                => Token::KwPre,
+        "THEN"               => Token::KwThen,
+        "VAR"                => Token::KwVar,
+        "IN"                 => Token::KwIn,
+        "WHILE"              => Token::KwWhile,
+        "DO"                 => Token::KwDo,
+        "VARIANT"            => Token::KwVariant,
+        "or"                 => Token::KwOr,
+        "mod"                => Token::KwMod,
+        "not"                => Token::KwNot,
+
+        "("   => Token::OpLpar,       
+        ")"   => Token::OpRpar,       
+        "{"   => Token::OpLbrace,     
+        "}"   => Token::OpRbrace,     
+        "["   => Token::OpLbracket,   
+        "]"   => Token::OpRbracket,   
+        ","   => Token::OpComma,      
+        ":"   => Token::OpColon,      
+        "&"   => Token::OpAmpersand , 
+        "="   => Token::OpEqual,      
+        ";"   => Token::OpSemicolon,  
+        "◦"   => Token::OpBullet,     
+        "×"   => Token::OpCross,      
+        "%"   => Token::OpPercent,    
+        "|"   => Token::OpVbar,       
+        "-"   => Token::OpMinus,      
+        "+"   => Token::OpPlus,       
+        "·"   => Token::OpMdot,       
+        "/"   => Token::OpSlash,
+        "."   => Token::OpDot,
+        "<|"  => Token::OpDomrestr,   
+        ".."  => Token::OpInter,      
+        ":="  => Token::OpAssign, 
+        "||"  => Token::OpDoubleBar,
+        "=>"  => Token::OpImply,
+        "<="  => Token::OpLeq,
+        "\\/" => Token::OpSimpleunion,
+        "/\\" => Token::OpSimpleinter,
+        "<=>" => Token::OpEquiv,
+        "-->" => Token::OpTotalfun,   
+        "<--" => Token::OpOutparam,   
+        
+        Integer    => Token::Integer(<&'input str>),
+        Float      => Token::Float(<&'input str>),
+        Identifier => Token::Identifier(<&'input str>),
     }
 }
 
 
 pub Component = Decl_component Header Statements "END";
 
-Decl_component = { "MACHINE", "REFINEMENT", "IMPLEMENTATION" };
+Decl_component = { "MACHINE", "IMPLEMENTATION" };
 
 Header = Identifier Paren_ident_list?;
 
@@ -120,7 +133,8 @@ Expression4 = {
 
 Expression5 = {
     Expression5 "<|" <Expression6>,
-    Expression5 r"\/" <Expression6>,
+    Expression5 "\\/" <Expression6>,
+    Expression5 "/\\" <Expression6>,
     Expression5 "◦" <Expression6>,
     Expression5 "×" <Expression6>,
     <Expression6>,
@@ -156,7 +170,7 @@ Expression10 = {
 };
 
 Expression11 = {
-    <Identifier> "$0"?,
+    <Identifier>,
     <Number>,
     "(" <Comma_sep_expr> ")",
     "{" <Comma_sep_expr> "}",
@@ -171,6 +185,10 @@ Paren_ident_list = "(" <Ident_list> ")"  ;
 
 Ident_list = Dummy<Identifier,",">;
 
+Number = {
+    Integer,
+    Float,
+};
 
 
 // Macro -----------------------------------
