@@ -1,59 +1,98 @@
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum Token<T> where T:PartialEq+ Eq{
-    Error,
-    Spaces(T),
-    Comment(T),
-    Integer(T),
-    Float(T),
-    Identifier(T),
-    Keyword(T),
-    Operator(T),
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum Token <'a> {
+    Integer(&'a str),
+    Float(&'a str),
+    Identifier(&'a str),
+    
+    KwMACHINE,
+    KwIMPLEMENTATION,
+    KwCONSTRAINTS,
+    KwCONCRETEVARIABLES,
+    KwINVARIANT,
+    KwINITIALISATION,
+    KwOPERATIONS,
+    KwEND,
+    KwPRE,
+    KwTHEN,
+    KwVAR,
+    KwIN,
+    KwWHILE,
+    KwDO,
+    KwVARIANT,
+    
+    OpLpar,        // "(",
+    OpRpar,        // ")",
+    OpLbrace,      // "{",
+    OpRbrace,      // "}",
+    OpLbracket,    // "[",
+    OpRbracket,    // "]",
+    OpComma,       // ",",
+    OpColon,       // ":",
+    OpAmpersand ,  // "&",
+    OpEqual,       // "=",
+    OpSemicolon,   // ";",
+    OpBullet,      // "◦",
+    OpCross,       // "×",
+    OpPercent,     // "%",
+    OpVbar,        // "|",
+    OpMinus,       // "-",
+    OpPlus,        // "+",
+    OpMdot,        // "·",
+    OpSlash,       // "/",
+    OpDomrestr,    // "<|",
+    OpInter,       // "..",
+    OpAssign,      // ":=",
+    OpSimpleunion, // "\\/",
+    OpSimpleinter, // "/\\",
+    OpTotalfun,    // "-->",
+    OpOutparam,    // "<--",
 }
 
-pub type TokensOwn = Vec<Token<String>>;
 
-pub type TokensRef<'a> = Vec<Token<&'a str>>;
-
-
-
-pub fn tokens_to_source( toks : &TokensOwn ) -> String {
-    "".to_owned() //TODO implement me
-}
-
-/* TODO does not compile
-pub fn tokensOwn_to_tokensRef( toks : &TokensOwn ) -> &TokensRef {
-    let mut res = vec![];
-    for tok in &toks {
-        match tok {
-        Error @t => res.push(t),
-        _ =>  (),
-        }
-    }
-    res
-}
-*/
-
-pub const KEYWORDS : [&'static str; 16] = [
-    "MACHINE",
-    "IMPLEMENTATION",
-    "CONSTRAINTS",
-    "CONCRETE_VARIABLES",
-    "INVARIANT",
-    "INITIALISATION",
-    "OPERATIONS",
-    "END",
-    "PRE",
-    "THEN",
-    "VAR",
-    "IN",
-    "WHILE",
-    "DO",
-    "INVARIANT",
-    "VARIANT",
+pub const KEYWORDS : [(&'static str,Token<'static>); 15] = [
+    ("MACHINE",            Token::KwMACHINE),
+    ("IMPLEMENTATION",     Token::KwIMPLEMENTATION),
+    ("CONSTRAINTS",        Token::KwCONSTRAINTS),
+    ("CONCRETE_VARIABLES", Token::KwCONCRETEVARIABLES),
+    ("INVARIANT",          Token::KwINVARIANT),
+    ("INITIALISATION",     Token::KwINITIALISATION),
+    ("OPERATIONS",         Token::KwOPERATIONS),
+    ("END",                Token::KwEND),
+    ("PRE",                Token::KwPRE),
+    ("THEN",               Token::KwTHEN),
+    ("VAR",                Token::KwVAR),
+    ("IN",                 Token::KwIN),
+    ("WHILE",              Token::KwWHILE),
+    ("DO",                 Token::KwDO),
+    ("VARIANT",            Token::KwVARIANT),
 ];
 
-pub const OPERATORS : [&'static str; 26] = [
-    "(", ")", "{", "}", "[", "]", ",", ":", "&", "..", "-->", ":=", "<--",
-    "=", ";", "◦", "×", r"\/", r"/\", "%", "|", "-", "+", "·", "/", "<|",
+pub const OPERATORS : [(&'static str,Token<'static>); 26] = [
+    ("(",   Token::OpLpar),
+    (")",   Token::OpRpar),
+    ("{",   Token::OpLbrace),
+    ("}",   Token::OpRbrace),
+    ("[",   Token::OpLbracket),
+    ("]",   Token::OpRbracket),
+    (",",   Token::OpComma),
+    (":",   Token::OpColon),
+    ("&",   Token::OpAmpersand),
+    ("=",   Token::OpEqual),
+    (";",   Token::OpSemicolon),
+    ("◦",   Token::OpBullet),
+    ("×",   Token::OpCross),
+    ("%",   Token::OpPercent),
+    ("|",   Token::OpVbar),
+    ("-",   Token::OpMinus),
+    ("+",   Token::OpPlus),
+    ("·",   Token::OpMdot),
+    ("/",   Token::OpSlash),
+    ("<|",  Token::OpDomrestr),
+    ("..",  Token::OpInter),
+    (":=",  Token::OpAssign),
+    ("\\/", Token::OpSimpleunion),
+    ("/\\", Token::OpSimpleinter),
+    ("-->", Token::OpTotalfun),
+    ("<--", Token::OpOutparam),
 ];

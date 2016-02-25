@@ -1,5 +1,5 @@
 
-use syntax::{Token, TokensRef};
+use syntax::{Token};
 
 
 //
@@ -18,33 +18,29 @@ use syntax::{Token, TokensRef};
 
 #[test]
 fn test_trivial(){
-    assert_eq!(scan(" "), vec![Token::Spaces(" ")]);
-    assert_eq!(scan(" \n\t"), vec![Token::Spaces(" \n\t")]);
-    assert_eq!(scan("//x"), vec![Token::Comment("//x")]);
-    assert_eq!(scan("// one"), vec![Token::Comment("// one")]);
-    assert_eq!(scan("/* \n*/"), vec![Token::Comment("/* \n*/")]);
+    assert_eq!(scan(" "), vec![]);
+    assert_eq!(scan(" \n\t"), vec![]);
+    assert_eq!(scan("//x"), vec![]);
+    assert_eq!(scan("// one"), vec![]);
+    assert_eq!(scan("/* \n*/"), vec![]);
     assert_eq!(scan("123"), vec![Token::Integer("123")]);
     assert_eq!(scan("123."), vec![Token::Float("123.")]);
     assert_eq!(scan("123.456"), vec![Token::Float("123.456")]);
     assert_eq!(scan("foo_bar2"), vec![Token::Identifier("foo_bar2")]);
-    assert_eq!(scan("THEN"), vec![Token::Keyword("THEN")]);
+    assert_eq!(scan("THEN"), vec![Token::KwTHEN]);
     assert_eq!(scan("THENxxx"), vec![Token::Identifier("THENxxx")]);
-    assert_eq!(scan("-"), vec![Token::Operator("-")]);
-    assert_eq!(scan("-->"), vec![Token::Operator("-->")]);
-    assert_eq!(scan("◦"), vec![Token::Operator("◦")]);
-    assert_eq!(scan("×"), vec![Token::Operator("×")]);
-    assert_eq!(scan("·"), vec![Token::Operator("·")]);
+    assert_eq!(scan("-"), vec![Token::OpMinus]);
+    assert_eq!(scan("-->"), vec![Token::OpTotalfun]);
+    assert_eq!(scan("◦"), vec![Token::OpBullet]);
+    assert_eq!(scan("×"), vec![Token::OpCross]);
+    assert_eq!(scan("·"), vec![Token::OpMdot]);
 }
 
 #[test]
 fn test_double(){
     assert_eq!(scan("//xy z\n  "), vec![
-        Token::Comment("//xy z"),
-        Token::Spaces("\n  "),
     ]);
     assert_eq!(scan("\n  //xy z"), vec![
-        Token::Spaces("\n  "),
-        Token::Comment("//xy z"),
     ]);
 }
 
@@ -100,28 +96,35 @@ fn test_unicode_alphab(){
 
 #[test]
 fn test_composed(){
-    assert_eq!(scan("1..2"), vec![Token::Integer("1"), Token::Operator(".."), Token::Integer("2")]);
+    assert_eq!(scan("1..2"), vec![
+        Token::Integer("1"),
+        Token::OpInter,
+        Token::Integer("2")]);
 }
 
-struct ScannerState<'a> {
+struct ScannerState <'a> {
     i : usize,
     j : usize,
-    token : Token<&'a str>,
+    token : Option<Token<'a>>,
     source : &'a str,
     
     size_left : usize, // in bytes
     size_right : usize, // in bytes
+    
+    stop : bool,
 }
 
-pub fn scan(source : &str) -> TokensRef {
+pub fn scan <'a>(source : &'a str) -> Vec<Token> {
     let mut state = ScannerState{
         i:0,
         j:0,
-        token : Token::Error,
+        token : None,
         source : source,
         
         size_left : 0,
         size_right : 0,
+        
+        stop : true,
     };
     let mut res = vec![];
     loop {
@@ -130,21 +133,28 @@ pub fn scan(source : &str) -> TokensRef {
         state.scan_comment_monoline();
         state.scan_comment_multiline();
         state.scan_number();
-        for keyword in ::syntax::KEYWORDS.iter() {
-            state.scan_keyword(keyword);
-        }
-        state.scan_identifier();
-        for operator in ::syntax::OPERATORS.iter() {
-            state.scan_operator(operator);
+        
+        for &(string,tok) in &::syntax::KEYWORDS {
+            state.scan_string(string,tok);
         }
         
-        if state.token == Token::Error {
+        state.scan_identifier();
+        
+        for &(string,tok) in &::syntax::OPERATORS {
+            state.scan_string(string,tok);
+        }
+        
+        if state.stop {
             return res
         }
-        res.push(state.token);
+        match state.token {
+            Some(tok) => {res.push(tok);},
+            None => {},
+        }
         state.i = state.j;
         state.size_left = state.size_right;
-        state.token = Token::Error;
+        state.token = None;
+        state.stop = true;
     }
 }
 
@@ -165,8 +175,8 @@ impl<'a> ScannerState<'a> {
         if self.j < x {
             self.j = x;
             self.size_right = new_right;
-            let content = &self.source[self.size_left..self.size_right];
-            self.token = Token::Spaces(content);
+            self.token = None;
+            self.stop = false;
         }
     }
 
@@ -191,8 +201,8 @@ impl<'a> ScannerState<'a> {
         if self.j < x {
             self.j = x;
             self.size_right = new_right;
-            let content = &self.source[self.size_left..self.size_right];
-            self.token = Token::Comment(content);
+            self.token = None;
+            self.stop = false;
         }
     }
     
@@ -246,8 +256,8 @@ impl<'a> ScannerState<'a> {
         if self.j < x {
             self.j = x;
             self.size_right = new_right;
-            let content = &self.source[self.size_left..self.size_right];
-            self.token = Token::Comment(content)
+            self.token = None;
+            self.stop = false;
         }
     }
     
@@ -282,10 +292,11 @@ impl<'a> ScannerState<'a> {
             self.size_right = new_right;
             let content = &self.source[self.size_left..self.size_right];
             self.token = if float {
-                Token::Float(content)
+                Some(Token::Float(content))
             } else {
-                Token::Integer(content)
-            }
+                Some(Token::Integer(content))
+            };
+            self.stop = false;
         }
     }
 
@@ -320,11 +331,12 @@ impl<'a> ScannerState<'a> {
             self.j = x;
             self.size_right = new_right;
             let content = &self.source[self.size_left..self.size_right];
-            self.token = Token::Identifier(content)
+            self.token = Some(Token::Identifier(content));
+            self.stop = false;
         }
     }
     
-    fn scan_keyword(&mut self, keyword : &str){
+    fn scan_string(&mut self, keyword : &str, tok : Token<'a>){
         let mut x = self.i;
         let mut new_right = self.size_left;
         let iter = self.source.char_indices().skip(self.i);
@@ -340,30 +352,8 @@ impl<'a> ScannerState<'a> {
         if self.j < x {
             self.j = x;
             self.size_right = new_right;
-            let content = &self.source[self.size_left..self.size_right];
-            self.token = Token::Keyword(content)
-        }
-    }
-    
-    // TODO factorize with scan_keyword
-    fn scan_operator(&mut self, operator : &str){
-        let mut x = self.i;
-        let mut new_right = self.size_left;
-        let iter = self.source.char_indices().skip(self.i);
-        let ik = operator.chars();
-        for ((i,a),b) in iter.zip(ik) {
-            if a == b {
-                x += 1;
-                new_right = i + a.len_utf8();
-            } else {
-                break;
-            }
-        }
-        if self.j < x {
-            self.j = x;
-            self.size_right = new_right;
-            let content = &self.source[self.size_left..self.size_right];
-            self.token = Token::Operator(content)
+            self.token = Some(tok);
+            self.stop = false;
         }
     }
     
