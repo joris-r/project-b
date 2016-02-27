@@ -1,0 +1,126 @@
+
+Component
+  ::= ( 'MACHINE' | 'REFINEMENT' | 'IMPLEMENTATION' )
+    ID ParIdList?
+    Clause*
+    'END'
+
+IdList
+  ::= ID ( ',' ID )*
+
+ParIdList
+  ::= '(' IdList ')'
+
+Clause
+  ::= 'REFINES' ID
+    
+    | ( 'USES'
+      | 'EXTENDS'
+      | 'INCLUDES'
+      | 'IMPORTS' 
+      | 'SEES'   ) IdList
+        
+    | ( 'CONSTANTS'
+      | 'CONCRETE_CONSTANTS'
+      | 'ABSTRACT_CONSTANTS'
+      | 'VARIABLES'
+      | 'ABSTRACT_VARIABLES'
+      | 'CONCRETE_VARIABLES'
+      | 'PROMOTES'         ) IdList
+        
+    | ( 'ASSERTIONS' | 'VALUES' | 'SETS' ) Expr ( ';' Expr )*
+    
+    | ( 'CONSTRAINTS' | 'PROPERTIES' | 'INVARIANT' ) Expr
+    
+    | 'INITIALISATION' Sub
+    
+    | ( 'OPERATIONS' | 'LOCAL_OPERATIONS' ) Ope ( ';' Ope )*
+ 
+Ope
+  ::= ( IdList '<--' )? ID ParIdList? '=' Sub
+    
+Sub
+  ::= 'BEGIN' Sub 'END'
+    | ( 'PRE' | 'ASSERT' ) Expr 'THEN' Sub 'END'
+    | 'VAR' IdList 'IN' Sub 'END'
+    | 'ANY' IdList 'WHERE' Expr 'THEN' Sub 'END'
+    | 'LET' IdList 'BE' Expr 'IN' Sub 'END'
+    | 'WHILE' Expr 'DO' Sub 'INVARIANT' Expr 'VARIANT' Expr 'END'
+    
+    | 'CHOICE'
+      ( 'OR' Sub )*
+      'END'
+    
+    | 'IF' Expr 'THEN' Sub
+      ( 'ELSIF' Expr 'THEN' Sub )*
+      ( 'ELSE' Sub )?
+      'END'
+    
+    | 'SELECT' Expr 'THEN' Sub 
+      ( 'WHEN' Expr 'THEN' Sub )*
+      ( 'ELSE' Sub )?
+      'END'
+    
+    | 'CASE' Expr 'OF'
+      'EITHER' Expr 'THEN' Sub 
+      ( 'OR' Expr 'THEN' Sub )*
+      'END' 'END'
+    
+    | ( IdList '<--' )? ID ( '(' Expr ')' )?
+    | Sub ( ( ';' | '||' ) Sub )*
+    | IdList ':=' Expr
+    | IdList '::' Expr
+    | IdList ':' '(' Expr ')'
+
+Expr ::= Expr20
+    
+Expr20
+  ::= ( Expr20 ( ';' | '||' ) )? Expr30
+Expr30
+  ::= ( Expr30 '=>' )? Expr40
+Expr40
+  ::= ( Expr40 ( '&' | 'or' ) )? Expr60
+Expr60
+  ::= ( Expr60 ( '<=>' | '=' ) )? Expr110
+Expr110
+  ::= ( Expr110 ( '/<:' | '/<<:' | '<:' | '<<:' ) )? Expr115
+Expr115
+  ::= ( Expr115 ',' )? Expr120
+Expr120
+  ::= ( Expr120 ':' )? Expr125
+Expr125
+  ::= ( Expr125 ( '+->' | '+->>' | '-->' | '-->>' | '<->' | '>->' | '>+>' | '>->>' | '>+>>' ) )? Expr130
+Expr130
+  ::= ( Expr130 '->' )? Expr160
+Expr160
+  ::= ( Expr160 ( '/:' | '/=' | '/\' | '/|\' | '<-' | '<<|' | '<=' | '|->' | '|>' | '|>>' | '><' | '>=' | '\/' | '\|/' | '^' | '<|' | '<' | '<+' | '>' ) )? Expr170
+Expr170
+  ::= ( Expr170 '..' )? Expr180
+Expr180
+  ::= ( Expr180 ( '-' | '+' ) )? Expr190
+Expr190
+  ::= ( Expr190 ( '*' | '/' | 'mod' ) )? Expr200
+Expr200
+  ::= ( Expr200 '**' )? Expr210
+Expr210
+  ::= '-' Expr210
+    | Expr230
+Expr230
+  ::= Expr230 '~'
+    | Expr250
+Expr250
+  ::= ExprCall ( "'" ID )?
+    
+ExprCall
+  ::= ExprCall '(' Expr ')'
+    | ExprCall '[' Expr ']'
+    | ExprEnd
+    
+ExprEnd
+  ::= '(' Expr ')'
+    | ID '$0'?
+    | NUM
+    | '{' Expr ( ',' Expr )* ( '|' Expr )? '}'
+    | '[' Expr ( ',' Expr )* ']'
+    | ( '!' | '#' ) ( ID | ParIdList ) '.' '(' Expr ')'
+    | ( 'SIGMA' | 'PI' | 'UNION' | 'INTER' | 'LAMBDA' ) ( ID | ParIdList ) '.' '(' Expr '|' Expr ')'
