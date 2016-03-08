@@ -101,7 +101,7 @@ Expr180
 Expr190
   ::= ( Expr190 ( '*' | '/' | 'mod' ) )? Expr200
 Expr200
-  ::= ( Expr200 '**' )? Expr210
+  ::= Expr210 ( '**' Expr200 )?
 Expr210
   ::= '-' Expr210
     | Expr230
