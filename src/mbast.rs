@@ -2,77 +2,85 @@
 //
 //             MBAST: Mini B-language Abstract Syntax Tree
 //
+// It's a "mini" B-AST because the types allow more than legal B in order to
+// simplify and factorize.
 
 #![allow(dead_code)]
 
-enum Mbast {
-
-    Component
-    {   kind: ComponentKind
-    ,   name: String
-    ,   formal_param: Vec<String>
-    ,   refines: Option<String>
-
-    ,   imports: Vec< ( String, Option<Box<Mbast>> ) >
-    ,   includes: Vec< ( String, Option<Box<Mbast>> ) >
-    ,   extends: Vec< ( String, Option<Box<Mbast>> ) >
-
-    ,   sees: Vec<String>
-    ,   promotes: Vec<String>
-    ,   uses: Vec<String>
-
-    ,   abstract_constants: Vec<String>
-    ,   abstract_variables: Vec<String>
-    ,   concrete_constants: Vec<String>
-    ,   concrete_variables: Vec<String>
-    ,   constants: Vec<String>
-    ,   variables: Vec<String>
+struct Component {
+    kind: ComponentKind,
+    name: String,
+    formal_param: Vec<String>,
+    refines: Option<String>,
+ 
+    imports: Vec< ( String, Option<Box<Expr>> ) >,
+    includes: Vec< ( String, Option<Box<Expr>> ) >,
+    extends: Vec< ( String, Option<Box<Expr>> ) >,
+ 
+    sees: Vec<String>,
+    promotes: Vec<String>,
+    uses: Vec<String>,
+ 
+    abstract_constants: Vec<String>,
+    abstract_variables: Vec<String>,
+    concrete_constants: Vec<String>,
+    concrete_variables: Vec<String>,
+    constants: Vec<String>,
+    variables: Vec<String>,
+ 
+    constraints: Option<Box<Expr>>,
+    properties: Option<Box<Expr>>,
+    invariant: Option<Box<Expr>>,
+ 
+    sets: Vec<Box<Expr>>,
+    values: Vec<Box<Expr>>,
+    assertions: Vec<Box<Expr>>,
+ 
+    initialisation: Option<Box<Sub>>,
+    operations: Vec<Box<Ope>>,
+    local_operations: Vec<Box<Ope>>,
+}
     
-    ,   constraints: Option<Box<Mbast>>
-    ,   properties: Option<Box<Mbast>>
-    ,   invariant: Option<Box<Mbast>>
+struct Ope{
+    param_out: Vec<String>,
+    name: String,
+    param_in: Vec<String>,
+    sub: Box<Sub>,
+}
     
-    ,   sets: Vec<Box<Mbast>>
-    ,   values: Vec<Box<Mbast>>
-    ,   assertions: Vec<Box<Mbast>>
+enum Sub {
+    SubBin(Box<Sub>, SubBinOpe, Box<Sub>),
     
-    ,   initialisation: Option<Box<Mbast>>
-    ,   operations: Vec<Box<Mbast>>
-    ,   local_operations: Vec<Box<Mbast>>
-    },
+    SubBegin( Box<Sub> ),
     
-    Operation(Vec<String>, String, Vec<String>, Box<Mbast>),
+    SubPreAssert( SubPreAssertOpe, Box<Expr>, Box<Sub> ),
     
-    SubBin(Box<Mbast>, SubBinOpe, Box<Mbast>),
+    SubAnyLet( SubAnyLet, Vec<String>, Box<Expr>, Box<Sub> ),
     
-    SubBegin( Box<Mbast> ),
+    SubVar( Vec<String>, Box<Sub> ),
     
-    SubPreAssert( SubPreAssertOpe, Box<Mbast>, Box<Mbast> ),
+    SubChoice( Vec<Box<Sub>> ),
     
-    SubAnyLet( SubAnyLet, Vec<String>, Box<Mbast>, Box<Mbast> ),
+    SubIfSelect( SubIfSelect, Vec<( Box<Expr>, Box<Sub> )>, Option<Box<Sub>> ),
     
-    SubVar( Vec<String>, Box<Mbast> ),
+    SubCase( Box<Expr>, Vec<( Box<Expr>, Box<Sub> )>, Option<Box<Sub>> ),
     
-    SubChoice( Vec<Box<Mbast>> ),
+    SubWhile( Box<Expr>, Box<Sub>, Box<Expr>, Box<Expr> ),
+}
     
-    SubIfSelect( SubIfSelect, Vec<( Box<Mbast>, Box<Mbast> )>, Option<Box<Mbast>> ),
+enum Expr {
+    ExprUnary( ExprUnaryOpe, Box<Expr> ),
     
-    SubCase( Box<Mbast>, Vec<( Box<Mbast>, Box<Mbast> )>, Option<Box<Mbast>> ),
+    ExprStruct( Vec< ( String, Box<Expr> ) > ),
+    ExprRec( Vec< ( Option<String>, Box<Expr> ) > ),
     
-    SubWhile( Box<Mbast>, Box<Mbast>, Box<Mbast>, Box<Mbast> ),
-    
-    ExprUnary( ExprUnaryOpe, Box<Mbast> ),
-    
-    ExprStruct( Vec< ( String, Box<Mbast> ) > ),
-    ExprRec( Vec< ( Option<String>, Box<Mbast> ) > ),
-    
-    ExprBin( Box<Mbast>, ExprBinOpe, Box<Mbast> ),
+    ExprBin( Box<Expr>, ExprBinOpe, Box<Expr> ),
     
     ExprId(String),
     ExprNum(u32),
     
-    ExprQPred( ExprQPredOpe, Vec<String>, Box<Mbast> ),
-    ExprQuant( ExprQuantOpe, Vec<String>, Box<Mbast>, Box<Mbast> ),
+    ExprQPred( ExprQPredOpe, Vec<String>, Box<Expr> ),
+    ExprQuant( ExprQuantOpe, Vec<String>, Box<Expr>, Box<Expr> ),
 }
 
 enum ComponentKind{ Machine, Refinement, Implementation }
