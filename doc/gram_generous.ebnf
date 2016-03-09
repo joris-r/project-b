@@ -1,0 +1,141 @@
+
+component
+  ::= ("MACHINE" | "REFINEMENT" | "IMPLEMENTATION") id parIdList? clauses* "END"
+
+clause
+  ::= "REFINES" id
+    | ("IMPORTS" | "INCLUDES" | "EXTENDS") expr
+    | ("SEES" | "PROMOTES" | "USES") idList
+    | ("ABSTRACT_CONSTANTS" | "ABSTRACT_VARIABLES" | "CONCRETE_CONSTANTS" | "CONCRETE_VARIABLES" | "CONSTANTS" | "VARIABLES") idList
+    | ("CONSTRAINTS" | "PROPERTIES" | "INVARIANT")   expr
+    | ("SETS" | "VALUES" | "ASSERTIONS") expr
+    | "INITIALISATION" sub
+    | ("OPERATIONS" | "LOCAL_OPERATIONS") opeList
+
+opeList
+  ::= (opeList ";")? ope
+
+ope
+  ::= (idList "<--")? id parIdList? "=" sub2
+
+sub
+  ::= (sub (";" | "||"))? sub2
+
+sub2
+  ::= "BEGIN" sub "END"
+    | ("PRE" | "ASSERT") expr "THEN" sub "END"
+    | (("ANY" idList "WHERE") | "LET" idList "BE") expr "THEN" sub "END"
+    | "VAR" idList "IN" sub "END"
+    | "CHOICE" sub ("OR" sub)* "END"
+    | ( ("IF" expr "THEN" sub ("ELSIF" expr "THEN" sub)*)
+      | ("SELECT" expr "THEN" sub ("WHEN"  expr "THEN" sub)*)
+      ) ("ELSE" sub)? "END"
+    | "CASE" expr "OF" "EITHER" expr "THEN" sub ("OR" expr "THEN" sub)* ("ELSE" sub)? "END" "END"
+    | "WHILE" expr "DO" sub "INVARIANT" expr "VARIANT" expr "END"
+    | expr115 (":=" | "::" | "<--") expr115
+    
+expr
+  ::= expr20
+
+expr20
+  ::= (expr20 (";" | "||"))? expr30
+    
+expr20_rec
+  ::= (expr20_rec (";" | "||"))? expr30_rec
+    
+expr30
+  ::= (expr30 "=>")? expr40
+    
+expr30_rec
+  ::= (expr30_rec "=>")? expr40_rec
+    
+expr40
+  ::= (expr40 ("&" | "or"))? expr60
+    
+expr40_rec
+  ::= (expr40_rec ("&" | "or"))? expr60_rec
+    
+expr60
+  ::= (expr60 ("<=>" | "="))? expr110
+    
+expr60_rec
+  ::= (expr60_rec ("<=>" | "=" | ":"))? expr110_rec
+    
+expr110
+  ::= (expr110 ("/<:" | "/<<:" | "<:" | "<<:"))? expr115
+    
+expr110_rec
+  ::= (expr110_rec ("/<:" | "/<<:" | "<:" | "<<:"))? expr115_rec
+
+expr115
+  ::= (expr115 ",")? expr120
+
+expr115_rec
+  ::= (expr115_rec ",")? expr120_rec
+
+expr120
+  ::= (expr120 ":")? expr125
+
+expr120_rec
+  ::= expr125
+    
+expr125
+  ::= (expr125 ("+->" | "+->>" | "-->" | "-->>" | "<->" | ">->" | ">+>" | ">->>" | ">+>>"))? expr130
+    
+expr130
+  ::= (expr130 "->")? expr160
+    
+expr160
+  ::= (expr160 ("/:" | "/=" | "/\" | "/|\" | "<-" | "<<|" | "<=" | "|->" | "|>" | "|>>" | "><" | ">=" | "\/" | "\|/" | "^" | "<|" | "<" | "<+" | ">"))? expr170
+    
+expr170
+  ::= (expr170 "..")? expr180
+
+expr180
+  ::= (expr180 ("+" | "-"))? expr190
+    
+expr190
+  ::= (expr190 ("*" | "/" | "mod"))? expr200
+    
+expr200
+  ::= (expr210 "**")? expr200                               // note: left assoc.
+
+expr210
+  ::= expr230
+    | "-" expr210
+
+expr230
+  ::= expr250
+    | expr230 "~"
+    
+expr250
+  ::= (expr250 "'")? exprApply
+
+exprApply
+  ::= exprImg
+    | ("STRUCT" | "REC") "(" expr20_rec ")"
+    | exprApply "(" expr ")"
+
+exprImg
+  ::= exprEnd
+    | exprImg "[" expr "]"
+
+exprEnd
+  ::= id
+    | NUM
+    | "(" expr ")"
+    | "{"  expr ("|" expr)? "}"
+    | "[" expr          "]"
+    | ("!" | "#" ) (id | parIdList) "." "(" expr ")"
+    | ("SIGMA" | "PI" | "UNION" | "INTER" | "%") (id | parIdList) "." "(" expr "|" expr ")"
+
+parIdList
+  ::= "(" idList ")"
+
+idList
+  ::= id
+    | idList "," id
+    
+id
+  ::= ID "$0"?
+    | RENID
