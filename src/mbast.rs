@@ -7,7 +7,7 @@
 
 #![allow(dead_code)]
 
-struct Component {
+pub struct Component {
     kind: ComponentKind,
     name: String,
     formal_param: Vec<String>,
@@ -41,51 +41,51 @@ struct Component {
     local_operations: Vec<Box<Ope>>,
 }
     
-struct Ope{
+pub struct Ope{
     param_out: Vec<String>,
     name: String,
     param_in: Vec<String>,
     sub: Box<Sub>,
 }
     
-enum Sub {
-    SubBin(Box<Sub>, SubBinOpe, Box<Sub>),
+pub enum Sub {
+    Bin(Box<Sub>, SubBinOpe, Box<Sub>),
     
-    SubBegin( Box<Sub> ),
+    Begin( Box<Sub> ),
     
-    SubPreAssert( SubPreAssertOpe, Box<Expr>, Box<Sub> ),
+    PreAssert( SubPreAssertOpe, Box<Expr>, Box<Sub> ),
     
-    SubAnyLet( SubAnyLet, Vec<String>, Box<Expr>, Box<Sub> ),
+    AnyLet( SubAnyLet, Vec<String>, Box<Expr>, Box<Sub> ),
     
-    SubVar( Vec<String>, Box<Sub> ),
+    Var( Vec<String>, Box<Sub> ),
     
-    SubChoice( Vec<Box<Sub>> ),
+    Choice( Vec<Box<Sub>> ),
     
-    SubIfSelect( SubIfSelect, Vec<( Box<Expr>, Box<Sub> )>, Option<Box<Sub>> ),
+    IfSelect( SubIfSelect, Vec<( Box<Expr>, Box<Sub> )>, Option<Box<Sub>> ),
     
-    SubCase( Box<Expr>, Vec<( Box<Expr>, Box<Sub> )>, Option<Box<Sub>> ),
+    Case( Box<Expr>, Vec<( Box<Expr>, Box<Sub> )>, Option<Box<Sub>> ),
     
-    SubWhile( Box<Expr>, Box<Sub>, Box<Expr>, Box<Expr> ),
+    While( Box<Expr>, Box<Sub>, Box<Expr>, Box<Expr> ),
 }
     
-enum Expr {
-    ExprUnary( ExprUnaryOpe, Box<Expr> ),
+pub enum Expr {
+    Unary( ExprUnaryOpe, Box<Expr> ),
     
-    ExprStruct( Vec< ( String, Box<Expr> ) > ),
-    ExprRec( Vec< ( Option<String>, Box<Expr> ) > ),
+    Struct( Vec< ( String, Box<Expr> ) > ),
+    Rec( Vec< ( Option<String>, Box<Expr> ) > ),
     
-    ExprBin( Box<Expr>, ExprBinOpe, Box<Expr> ),
+    Bin( Box<Expr>, ExprBinOpe, Box<Expr> ),
     
-    ExprId(String),
-    ExprNum(u32),
+    Id(String),
+    Num(String),
     
-    ExprQPred( ExprQPredOpe, Vec<String>, Box<Expr> ),
-    ExprQuant( ExprQuantOpe, Vec<String>, Box<Expr>, Box<Expr> ),
+    QPred( ExprQPredOpe, Vec<String>, Box<Expr> ),
+    Quant( ExprQuantOpe, Vec<String>, Box<Expr>, Box<Expr> ),
 }
 
-enum ComponentKind{ Machine, Refinement, Implementation }
+pub enum ComponentKind{ Machine, Refinement, Implementation }
 
-enum SubBinOpe{
+pub enum SubBinOpe{
     Sequence,       // sub ; sub
     Parallel,       // sub || sub
     Assign,         // expr := expr
@@ -94,11 +94,11 @@ enum SubBinOpe{
     OperationCall,  // idList <-- id(idList)  (or variants)
 }
 
-enum SubPreAssertOpe{ Pre, Assert }
-enum SubAnyLet{ Any, Let }
-enum SubIfSelect{ If, Select }
+pub enum SubPreAssertOpe{ Pre, Assert }
+pub enum SubAnyLet{ Any, Let }
+pub enum SubIfSelect{ If, Select }
 
-enum ExprUnaryOpe
+pub enum ExprUnaryOpe
 {   Minus               // -x
 ,   Inverse             // x~
 ,   Paren               // (x)
@@ -106,10 +106,10 @@ enum ExprUnaryOpe
 ,   ListExtension       // [x]
 }
 
-enum ExprQPredOpe{ Forall, Exist }
-enum ExprQuantOpe{ Lambda, Sigma, Pi, Union, Inter }
+pub enum ExprQPredOpe{ Forall, Exist }
+pub enum ExprQuantOpe{ Lambda, Sigma, Pi, Union, Inter }
 
-enum ExprBinOpe
+pub enum ExprBinOpe
 {   Apply         // f(x)
 ,   Image         // r[x]
 ,   SetCompreh    // { x | P }

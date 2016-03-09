@@ -2,6 +2,7 @@
 grammar<'input>(text: &'input str)["LALR(1)"];
 
 use syntax::Token;
+use mbast::*;
 
 extern {
     enum Token<'input> {
@@ -65,142 +66,142 @@ extern {
 }
 
 
-pub Component = Decl_component Header Statements "END";
+pub Component: () = Decl_component Header Statements "END" => ();
 
-Decl_component = { "MACHINE", "IMPLEMENTATION" };
-
-Header = Identifier Paren_ident_list?;
-
-Statements = Statement*;
-
-Statement = {
-    "REFINES" Ident_list,
-    "CONCRETE_VARIABLES" Ident_list,
-    "CONSTRAINTS" Expression,
-    "INVARIANT" Expression,
-    "INITIALISATION" Substitution,
-    "OPERATIONS" Operation_list,
+Decl_component: () = {
+    "MACHINE" => (),
+    "IMPLEMENTATION" => (),
 };
 
-Operation_list = Dummy<Operation,";">;
+Header: () = Identifier Paren_ident_list? => ();
 
-Operation = (Ident_list "<--")? <Identifier> Paren_ident_list? "=" Substitution;
+Statements: () = Statement* => ();
 
-Substitution = {
-    "BEGIN" <Substitution2> "END",
-    "PRE" Expression "THEN" <Substitution2> "END",
-    "VAR" Ident_list "IN" <Substitution2> "END",
+Statement: () = {
+    "REFINES" Ident_list => (),
+    "CONCRETE_VARIABLES" Ident_list => (),
+    <"CONSTRAINTS"> Expression => (),
+    <"INVARIANT"> Expression => (),
+    <"INITIALISATION"> Substitution => (),
+    "OPERATIONS" Operation_list => (),
+};
+
+Operation_list = ListSep<Operation,";">;
+
+Operation: () = (Ident_list "<--")? <Identifier> Paren_ident_list? "=" Substitution => ();
+
+Substitution: ()  = {
+    "BEGIN" <Substitution2> "END" => (),
+    "PRE" Expression "THEN" <Substitution2> "END" => (),
+    "VAR" Ident_list "IN" <Substitution2> "END" => (),
     "WHILE" Expression "DO" <Substitution2>
                        "INVARIANT" Expression
                        "VARIANT" Expression
-                       "END",
+                       "END" => (),
 };
 
-Substitution2 = {
-    Substitution2 ";" <Substitution3>,
-    Substitution2 "||" <Substitution3>,
-    <Substitution3>,
+Substitution2: () = {
+    <Substitution2> ";" <Substitution3> => (),
+    <Substitution2> "||" <Substitution3> => (),
+    <Substitution3> => (),
 };
 
-Substitution3 = {
-    Expression ":=" <Expression>,
-    <Substitution>,
+Substitution3: () = {
+    <Expression> ":=" <Expression> => (),
+    <Substitution> => (),
 };
 
-Expression = {
-    Expression "<=>" <Expression2>,
-    Expression "=>" <Expression2>,
-    <Expression2>,
+Expression: Expr = {
+    Expression "<=>" <Expression2> => Expr::Id("Dummy".to_owned()),
+    Expression "=>" <Expression2> => Expr::Id("Dummy".to_owned()),
+    <Expression2> => Expr::Id("Dummy".to_owned()),
 };
 
-Expression2 = {
-    Expression2 "&" <Expression3>,
-    Expression2 "or" <Expression3>,
-    <Expression3>,
+Expression2: Expr = {
+    Expression2 "&" <Expression3> => Expr::Id("Dummy".to_owned()),
+    Expression2 "or" <Expression3> => Expr::Id("Dummy".to_owned()),
+    <Expression3> => Expr::Id("Dummy".to_owned()),
 };
 
-Expression3 = {
-    Expression3 ":" <Expression4>,
-    Expression3 "<=" <Expression4>,
-    Expression3 "=" <Expression4>,
-    <Expression4>,
+Expression3: Expr = {
+    Expression3 ":" <Expression4> => Expr::Id("Dummy".to_owned()),
+    Expression3 "<=" <Expression4> => Expr::Id("Dummy".to_owned()),
+    Expression3 "=" <Expression4> => Expr::Id("Dummy".to_owned()),
+    <Expression4> => Expr::Id("Dummy".to_owned()),
 };
 
-Expression4 = {
-    Expression4 "-->" <Expression5>,
-    <Expression5>,
+Expression4: Expr = {
+    Expression4 "-->" <Expression5> => Expr::Id("Dummy".to_owned()),
+    <Expression5> => Expr::Id("Dummy".to_owned()),
 };
 
-Expression5 = {
-    Expression5 "<|" <Expression6>,
-    Expression5 "\\/" <Expression6>,
-    Expression5 "/\\" <Expression6>,
-    Expression5 "◦" <Expression6>,
-    Expression5 "×" <Expression6>,
-    <Expression6>,
+Expression5: Expr = {
+    Expression5 "<|" <Expression6> => Expr::Id("Dummy".to_owned()),
+    Expression5 "\\/" <Expression6> => Expr::Id("Dummy".to_owned()),
+    Expression5 "/\\" <Expression6> => Expr::Id("Dummy".to_owned()),
+    Expression5 "◦" <Expression6> => Expr::Id("Dummy".to_owned()),
+    Expression5 "×" <Expression6> => Expr::Id("Dummy".to_owned()),
+    <Expression6> => Expr::Id("Dummy".to_owned()),
 };
 
-Expression6 = {
-    Expression6 ".." <Expression7>,
-    <Expression7>,
+Expression6: Expr = {
+    Expression6 ".." <Expression7> => Expr::Id("Dummy".to_owned()),
+    <Expression7> => Expr::Id("Dummy".to_owned()),
 };
 
-Expression7 = {
-    Expression7 "+" <Expression8>,
-    Expression7 "-" <Expression8>,
-    <Expression8>,
+Expression7: Expr = {
+    Expression7 "+" <Expression8> => Expr::Id("Dummy".to_owned()),
+    Expression7 "-" <Expression8> => Expr::Id("Dummy".to_owned()),
+    <Expression8> => Expr::Id("Dummy".to_owned()),
 };
 
-Expression8 = {
-    Expression8 "·" <Expression9>,
-    Expression8 "/" <Expression9>,
-    Expression8 "mod" <Expression9>,
-    <Expression9>,
+Expression8: Expr = {
+    Expression8 "·" <Expression9> => Expr::Id("Dummy".to_owned()),
+    Expression8 "/" <Expression9> => Expr::Id("Dummy".to_owned()),
+    Expression8 "mod" <Expression9> => Expr::Id("Dummy".to_owned()),
+    <Expression9> => Expr::Id("Dummy".to_owned()),
 };
 
-Expression9 = {
-    "-" <Expression9>,
-    "not" <Expression9>,
-    <Expression10>,
+Expression9: Expr = {
+    "-" <Expression9> => Expr::Id("Dummy".to_owned()),
+    "not" <Expression9> => Expr::Id("Dummy".to_owned()),
+    <Expression10> => Expr::Id("Dummy".to_owned()),
 };
 
-Expression10 = {
-    Expression10 <Expression11>,
-    <Expression11>,
+Expression10: Expr = {
+    Expression10 <Expression11> => Expr::Id("Dummy".to_owned()),
+    <Expression11> => Expr::Id("Dummy".to_owned()),
 };
 
-Expression11 = {
-    <Identifier>,
+Expression11: Expr = {
+    <Identifier> => Expr::Id(<>.to_owned()),
     <Number>,
-    "(" <Comma_sep_expr> ")",
-    "{" <Comma_sep_expr> "}",
-    "%" Ident_or_paren_ident_list "." "(" Expression "|" <Expression> ")",
+    "%" <v:Ident_or_paren_ident_list> "." "(" <e:Expression> "|" <f:Expression> ")" => Expr::Quant(ExprQuantOpe::Lambda, v, Box::new(e), Box::new(f) ),
 };
 
-Comma_sep_expr = Dummy<Expression,",">;
-
-Ident_or_paren_ident_list = { Identifier, Paren_ident_list };
+Ident_or_paren_ident_list = {
+    Identifier => vec![<>.to_owned()],
+    Paren_ident_list
+};
 
 Paren_ident_list = "(" <Ident_list> ")"  ;
 
-Ident_list = Dummy<Identifier,",">;
+Ident_list: Vec<String> = {
+    <l:Ident_list> "," <i:Identifier> => {
+        let mut l = l;
+        l.push(i.to_owned());
+        l
+    },
+    <Identifier> => vec![<>.to_owned()]
+};
 
-Number = {
-    Integer,
-    Float,
+Number: Expr = {
+    Integer => Expr::Num(<>.to_owned()),
+    Float => Expr::Num(<>.to_owned()),
 };
 
 
 // Macro -----------------------------------
-
-Dummy<T,S>: T = {
-    <v:(<T> S)*> <e:T?> => match e {
-        None => "dummy",
-        Some(e) => {
-            e
-        }
-    }
-};
 
 ListSep<T,S>: Vec<T> = {
     <v:(<T> S)*> <e:T?> => match e {
