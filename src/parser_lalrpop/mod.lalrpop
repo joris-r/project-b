@@ -66,121 +66,274 @@ extern {
 }
 
 
-pub Component: () = Decl_component Header Statements "END" => ();
+pub Component: Component =
+    <k:Decl_component> <h:Header> <cb:Statements> "END" => {
+        let (name, params) = h;
+        cb.finalize(k, name, params)
+    };
 
-Decl_component: () = {
-    "MACHINE" => (),
-    "IMPLEMENTATION" => (),
+Decl_component: ComponentKind = {
+    "MACHINE" =>
+        ComponentKind::Machine,
+        
+    "IMPLEMENTATION" =>
+        ComponentKind::Implementation,
 };
 
-Header: () = Identifier Paren_ident_list? => ();
+Header: (String, Vec<String>) =
+    <n:Identifier> <l:Paren_ident_list?> => {
+        let params = match l {
+            Some(x) => x,
+            None => vec![],
+        };
+        (n.to_owned(), params)
+    };
 
-Statements: () = Statement* => ();
-
-Statement: () = {
-    "REFINES" Ident_list => (),
-    "CONCRETE_VARIABLES" Ident_list => (),
-    <"CONSTRAINTS"> Expression => (),
-    <"INVARIANT"> Expression => (),
-    <"INITIALISATION"> Substitution => (),
-    "OPERATIONS" Operation_list => (),
+Statements: ComponentBuilder = {
+    <a:Statements> <k:"REFINES"> <b:Identifier> => {
+        if a.refines == None {
+            let mut a = a;
+            a.refines = Some(b.to_owned());
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    <a:Statements> <k:"CONCRETE_VARIABLES"> <b:Ident_list> => {
+        if a.concrete_constants.is_empty() {
+            let mut a = a;
+            a.concrete_constants = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    <a:Statements> <k:"CONSTRAINTS"> <b:Expression> => {
+        match a.constraints {
+            None => {
+                let mut a = a;
+                a.constraints = Some(Box::new(b));
+                a
+            },
+            _ => panic!(format!("multiple {:?}", k)),
+        }
+    },
+    
+    <a:Statements> <k:"INVARIANT"> <b:Expression> => {
+        match a.invariant {
+            None => {
+                let mut a = a;
+                a.invariant = Some(Box::new(b));
+                a
+            },
+            _ => panic!(format!("multiple {:?}", k)),
+        }
+    },
+    
+    <a:Statements> <k:"INITIALISATION"> <b:Substitution> => {
+        match a.initialisation {
+            None => {
+                let mut a = a;
+                a.initialisation = Some(Box::new(b));
+                a
+            },
+            _ => panic!(format!("multiple {:?}", k)),
+        }
+    },
+    
+    <a:Statements> <k:"OPERATIONS"> <b:Operation_list> => {
+        if a.operations.is_empty() {
+            let mut a = a;
+            a.operations = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    () =>
+        ComponentBuilder::new(),
 };
 
-Operation_list = ListSep<Operation,";">;
+Operation_list =
+    ListSep<Operation,";">;
 
-Operation: () = (Ident_list "<--")? <Identifier> Paren_ident_list? "=" Substitution => ();
+Operation: Box<Ope> =
+    <po: ( <Ident_list> "<--" )? > <n:Identifier> <pi:Paren_ident_list?> "="
+        <s:Substitution>
+    =>
+        Box::new( Ope{
+            param_out: match po {
+                            None => vec![],
+                            Some(v) => v,
+                        },
+            name: n.to_owned(),
+            param_in: match pi {
+                            None => vec![],
+                            Some(v) => v,
+                       },
+            sub: Box::new(s), 
+            });
 
-Substitution: ()  = {
-    "BEGIN" <Substitution2> "END" => (),
-    "PRE" Expression "THEN" <Substitution2> "END" => (),
-    "VAR" Ident_list "IN" <Substitution2> "END" => (),
-    "WHILE" Expression "DO" <Substitution2>
-                       "INVARIANT" Expression
-                       "VARIANT" Expression
-                       "END" => (),
+Substitution: Sub  = {
+    "BEGIN" <Substitution2> "END" =>
+        Sub::Begin(Box::new(<>)),
+    
+    "PRE" <e:Expression> "THEN" <s:Substitution2> "END" =>
+        Sub::PreAssert(SubPreAssertOpe::Pre,
+                       Box::new(e),
+                       Box::new(s) ),
+    
+    "VAR" <x:Ident_list> "IN" <s:Substitution2> "END" =>
+        Sub::Var(x, Box::new(s)),
+    
+    "WHILE" <cond:Expression> "DO" <s:Substitution2>
+                       "INVARIANT" <inv:Expression>
+                       "VARIANT" <var:Expression>
+                       "END" =>
+        Sub::While(Box::new(cond),
+                   Box::new(s),
+                   Box::new(inv),
+                   Box::new(var) ),
 };
 
-Substitution2: () = {
-    <Substitution2> ";" <Substitution3> => (),
-    <Substitution2> "||" <Substitution3> => (),
-    <Substitution3> => (),
+Substitution2: Sub = {
+    <l:Substitution2> ";" <r:Substitution3> =>
+        Sub::Bin(Box::new(l), SubBinOpe::Sequence, Box::new(r)),
+        
+    <l:Substitution2> "||" <r:Substitution3> =>
+        Sub::Bin(Box::new(l), SubBinOpe::Parallel, Box::new(r)),
+        
+    <Substitution3>,
 };
 
-Substitution3: () = {
-    <Expression> ":=" <Expression> => (),
-    <Substitution> => (),
+Substitution3: Sub = {
+    <l:Expression> ":=" <r:Expression> =>
+        Sub::Simple(Box::new(l), SubSimple::Assign, Box::new(r)),
+        
+    <Substitution>,
 };
 
 Expression: Expr = {
-    Expression "<=>" <Expression2> => Expr::Id("Dummy".to_owned()),
-    Expression "=>" <Expression2> => Expr::Id("Dummy".to_owned()),
-    <Expression2> => Expr::Id("Dummy".to_owned()),
+    <l:Expression> "<=>" <r:Expression2> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::Equiv, Box::new(r)),
+    
+    <l:Expression> "=>" <r:Expression2> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::Imply, Box::new(r)),
+    
+    <Expression2>,
 };
 
 Expression2: Expr = {
-    Expression2 "&" <Expression3> => Expr::Id("Dummy".to_owned()),
-    Expression2 "or" <Expression3> => Expr::Id("Dummy".to_owned()),
-    <Expression3> => Expr::Id("Dummy".to_owned()),
+    <l:Expression2> "&" <r:Expression3> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::And, Box::new(r)),
+    
+    <l:Expression2> "or" <r:Expression3> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::Or, Box::new(r)),
+    
+    <Expression3>,
 };
 
 Expression3: Expr = {
-    Expression3 ":" <Expression4> => Expr::Id("Dummy".to_owned()),
-    Expression3 "<=" <Expression4> => Expr::Id("Dummy".to_owned()),
-    Expression3 "=" <Expression4> => Expr::Id("Dummy".to_owned()),
-    <Expression4> => Expr::Id("Dummy".to_owned()),
+    <l:Expression3> ":" <r:Expression4> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::Colon, Box::new(r)),
+    
+    <l:Expression3> "<=" <r:Expression4> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::Leq, Box::new(r)),
+    
+    <l:Expression3> "=" <r:Expression4> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::Equal, Box::new(r)),
+    
+    <Expression4>,
 };
 
 Expression4: Expr = {
-    Expression4 "-->" <Expression5> => Expr::Id("Dummy".to_owned()),
-    <Expression5> => Expr::Id("Dummy".to_owned()),
+    <l:Expression4> "-->" <r:Expression5> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::Tfun, Box::new(r)),
+        
+    <Expression5>,
 };
 
 Expression5: Expr = {
-    Expression5 "<|" <Expression6> => Expr::Id("Dummy".to_owned()),
-    Expression5 "\\/" <Expression6> => Expr::Id("Dummy".to_owned()),
-    Expression5 "/\\" <Expression6> => Expr::Id("Dummy".to_owned()),
-    Expression5 "◦" <Expression6> => Expr::Id("Dummy".to_owned()),
-    Expression5 "×" <Expression6> => Expr::Id("Dummy".to_owned()),
-    <Expression6> => Expr::Id("Dummy".to_owned()),
+    <l:Expression5> "<|" <r:Expression6> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::Domrestr, Box::new(r)),
+        
+    <l:Expression5> "\\/" <r:Expression6> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::Sunion, Box::new(r)),
+        
+    <l:Expression5> "/\\" <r:Expression6> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::Sinter, Box::new(r)),
+        
+    <l:Expression5> "◦" <r:Expression6> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::Interval, Box::new(r)),
+        
+    <l:Expression5> "×" <r:Expression6> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::Semicolon, Box::new(r)),
+        
+    <Expression6>,
 };
 
 Expression6: Expr = {
-    Expression6 ".." <Expression7> => Expr::Id("Dummy".to_owned()),
-    <Expression7> => Expr::Id("Dummy".to_owned()),
+    <l:Expression6> ".." <r:Expression7> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::Interval, Box::new(r)),
+        
+    <Expression7>,
 };
 
 Expression7: Expr = {
-    Expression7 "+" <Expression8> => Expr::Id("Dummy".to_owned()),
-    Expression7 "-" <Expression8> => Expr::Id("Dummy".to_owned()),
-    <Expression8> => Expr::Id("Dummy".to_owned()),
+    <l:Expression7> "+" <r:Expression8> => 
+        Expr::Bin(Box::new(l), ExprBinOpe::Plus, Box::new(r)),
+        
+    <l:Expression7> "-" <r:Expression8> => 
+        Expr::Bin(Box::new(l), ExprBinOpe::Minus, Box::new(r)),
+        
+    <Expression8>,
 };
 
 Expression8: Expr = {
-    Expression8 "·" <Expression9> => Expr::Id("Dummy".to_owned()),
-    Expression8 "/" <Expression9> => Expr::Id("Dummy".to_owned()),
-    Expression8 "mod" <Expression9> => Expr::Id("Dummy".to_owned()),
-    <Expression9> => Expr::Id("Dummy".to_owned()),
+    <l:Expression8> "·" <r:Expression9> => 
+        Expr::Bin(Box::new(l), ExprBinOpe::Star, Box::new(r)),
+        
+    <l:Expression8> "/" <r:Expression9> => 
+        Expr::Bin(Box::new(l), ExprBinOpe::Slash, Box::new(r)),
+        
+    <l:Expression8> "mod" <r:Expression9> => 
+        Expr::Bin(Box::new(l), ExprBinOpe::Mod, Box::new(r)),
+        
+    <Expression9>,
 };
 
 Expression9: Expr = {
-    "-" <Expression9> => Expr::Id("Dummy".to_owned()),
-    "not" <Expression9> => Expr::Id("Dummy".to_owned()),
-    <Expression10> => Expr::Id("Dummy".to_owned()),
+    "-" <Expression9> =>
+        Expr::Unary(ExprUnaryOpe::Minus, Box::new(<>)),
+        
+    "not" <Expression9> =>
+        Expr::Unary(ExprUnaryOpe::Negate, Box::new(<>)),
+        
+    <Expression10>,
 };
 
 Expression10: Expr = {
-    Expression10 <Expression11> => Expr::Id("Dummy".to_owned()),
-    <Expression11> => Expr::Id("Dummy".to_owned()),
+    <l:Expression10> <r:Expression11> =>
+        Expr::Bin(Box::new(l), ExprBinOpe::Apply, Box::new(r)),
+        
+    <Expression11>,
 };
 
 Expression11: Expr = {
     <Identifier> => Expr::Id(<>.to_owned()),
+    
     <Number>,
-    "%" <v:Ident_or_paren_ident_list> "." "(" <e:Expression> "|" <f:Expression> ")" => Expr::Quant(ExprQuantOpe::Lambda, v, Box::new(e), Box::new(f) ),
+    
+    "%" <v:Ident_or_paren_ident_list> "." "(" <e:Expression> "|" <f:Expression> ")"
+        => Expr::Quant(ExprQuantOpe::Lambda, v, Box::new(e), Box::new(f) ),
 };
 
 Ident_or_paren_ident_list = {
     Identifier => vec![<>.to_owned()],
+    
     Paren_ident_list
 };
 
@@ -192,6 +345,7 @@ Ident_list: Vec<String> = {
         l.push(i.to_owned());
         l
     },
+    
     <Identifier> => vec![<>.to_owned()]
 };
 
