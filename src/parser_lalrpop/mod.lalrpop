@@ -267,10 +267,10 @@ Expression5: Expr = {
         Expr::Bin(Box::new(l), ExprBinOpe::Sinter, Box::new(r)),
         
     <l:Expression5> "◦" <r:Expression6> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Interval, Box::new(r)),
+        Expr::Bin(Box::new(l), ExprBinOpe::Semicolon, Box::new(r)),
         
     <l:Expression5> "×" <r:Expression6> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Semicolon, Box::new(r)),
+        Expr::Bin(Box::new(l), ExprBinOpe::Star, Box::new(r)),
         
     <Expression6>,
 };
