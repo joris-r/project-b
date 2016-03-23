@@ -248,7 +248,7 @@ impl ComponentBuilder {
         }
     }
 
-    pub fn finalize(&self,
+    pub fn finalize(self,
                     kind: ComponentKind,
                     name: String,
                     formal_param: Vec<String> ) -> Component {
@@ -256,29 +256,28 @@ impl ComponentBuilder {
         {   kind               : kind
         ,   name               : name
         ,   formal_param       : formal_param
-        ,   refines            : self.refines.clone()
-        ,   imports            : self.imports.clone()
-        ,   includes           : self.includes.clone()
-        ,   extends            : self.extends.clone()
-        ,   sees               : self.sees.clone()
-        ,   promotes           : self.promotes.clone()
-        ,   uses               : self.uses.clone()
-        ,   abstract_constants : self.abstract_constants.clone()
-        ,   abstract_variables : self.abstract_variables.clone()
-        ,   concrete_constants : self.concrete_constants.clone()
-        ,   concrete_variables : self.concrete_variables.clone()
-        ,   constants          : self.constants.clone()
-        ,   variables          : self.variables.clone()
-        ,   constraints        : self.constraints.clone()
-        ,   properties         : self.properties.clone()
-        ,   invariant          : self.invariant.clone()
-        ,   sets               : self.sets.clone()
-        ,   values             : self.values.clone()
-        ,   assertions         : self.assertions.clone()
-        ,   initialisation     : self.initialisation.clone()
-        ,   operations         : self.operations.clone()
-        ,   local_operations   : self.local_operations.clone()
-        // TODO avoid the cloning
+        ,   refines            : self.refines
+        ,   imports            : self.imports
+        ,   includes           : self.includes
+        ,   extends            : self.extends
+        ,   sees               : self.sees
+        ,   promotes           : self.promotes
+        ,   uses               : self.uses
+        ,   abstract_constants : self.abstract_constants
+        ,   abstract_variables : self.abstract_variables
+        ,   concrete_constants : self.concrete_constants
+        ,   concrete_variables : self.concrete_variables
+        ,   constants          : self.constants
+        ,   variables          : self.variables
+        ,   constraints        : self.constraints
+        ,   properties         : self.properties
+        ,   invariant          : self.invariant
+        ,   sets               : self.sets
+        ,   values             : self.values
+        ,   assertions         : self.assertions
+        ,   initialisation     : self.initialisation
+        ,   operations         : self.operations
+        ,   local_operations   : self.local_operations
         }
     }
 }
