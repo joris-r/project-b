@@ -27,7 +27,7 @@ fn test_trivial(){
     assert_eq!(scan("123."), vec![Token::Float("123.")]);
     assert_eq!(scan("123.456"), vec![Token::Float("123.456")]);
     assert_eq!(scan("foo_bar2"), vec![Token::Identifier("foo_bar2")]);
-    assert_eq!(scan("THEN"), vec![Token::KwTHEN]);
+    assert_eq!(scan("THEN"), vec![Token::KwThen]);
     assert_eq!(scan("THENxxx"), vec![Token::Identifier("THENxxx")]);
     assert_eq!(scan("-"), vec![Token::OpMinus]);
     assert_eq!(scan("-->"), vec![Token::OpTotalfun]);
