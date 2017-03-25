@@ -1,70 +1,7 @@
 
-grammar<'input>(text: &'input str)["LALR(1)"];
+grammar;
 
-use syntax::Token;
 use mbast::*;
-
-extern {
-    enum Token<'input> {
-        "MACHINE"            => Token::KwMachine,
-        "IMPLEMENTATION"     => Token::KwImplementation,
-        "CONSTRAINTS"        => Token::KwConstraints,
-        "REFINES"            => Token::KwRefines,
-        "CONCRETE_VARIABLES" => Token::KwConcreteVariables,
-        "INVARIANT"          => Token::KwInvariant,
-        "INITIALISATION"     => Token::KwInitialisation,
-        "OPERATIONS"         => Token::KwOperations,
-        "BEGIN"              => Token::KwBegin,
-        "END"                => Token::KwEnd,
-        "PRE"                => Token::KwPre,
-        "THEN"               => Token::KwThen,
-        "VAR"                => Token::KwVar,
-        "IN"                 => Token::KwIn,
-        "WHILE"              => Token::KwWhile,
-        "DO"                 => Token::KwDo,
-        "VARIANT"            => Token::KwVariant,
-        "or"                 => Token::KwOr,
-        "mod"                => Token::KwMod,
-        "not"                => Token::KwNot,
-
-        "("   => Token::OpLpar,       
-        ")"   => Token::OpRpar,       
-        "{"   => Token::OpLbrace,     
-        "}"   => Token::OpRbrace,     
-        "["   => Token::OpLbracket,   
-        "]"   => Token::OpRbracket,   
-        ","   => Token::OpComma,      
-        ":"   => Token::OpColon,      
-        "&"   => Token::OpAmpersand , 
-        "="   => Token::OpEqual,      
-        ";"   => Token::OpSemicolon,  
-        "◦"   => Token::OpBullet,     
-        "×"   => Token::OpCross,      
-        "%"   => Token::OpPercent,    
-        "|"   => Token::OpVbar,       
-        "-"   => Token::OpMinus,      
-        "+"   => Token::OpPlus,       
-        "·"   => Token::OpMdot,       
-        "/"   => Token::OpSlash,
-        "."   => Token::OpDot,
-        "<|"  => Token::OpDomrestr,   
-        ".."  => Token::OpInter,      
-        ":="  => Token::OpAssign, 
-        "||"  => Token::OpDoubleBar,
-        "=>"  => Token::OpImply,
-        "<="  => Token::OpLeq,
-        "\\/" => Token::OpSimpleunion,
-        "/\\" => Token::OpSimpleinter,
-        "<=>" => Token::OpEquiv,
-        "-->" => Token::OpTotalfun,   
-        "<--" => Token::OpOutparam,   
-        
-        Integer    => Token::Integer(<&'input str>),
-        Float      => Token::Float(<&'input str>),
-        Identifier => Token::Identifier(<&'input str>),
-    }
-}
-
 
 pub Component: Component =
     <k:Decl_component> <h:Header> <cb:Statements> "END" => {
@@ -350,8 +287,11 @@ Ident_list: Vec<String> = {
 };
 
 Number: Expr = {
-    Integer => Expr::Num(<>.to_owned()),
-    Float => Expr::Num(<>.to_owned()),
+    <s:r"[0-9]+"> => Expr::Num(s.to_owned()),
+};
+
+Identifier: String ={
+    <s:r"[a-zA-Z_][a-zA-Z0-9_]*"> => s.to_owned(),
 };
 
 
