@@ -8,8 +8,8 @@ build = "build.rs"
 version = "0.2.1"
 
 [dependencies]
-lalrpop-util = { git = "https://github.com/nikomatsakis/lalrpop"}
+lalrpop-util = ">= 0.12.5"
 
 [build-dependencies]
-lalrpop = { git = "https://github.com/nikomatsakis/lalrpop"}
+lalrpop = ">= 0.12.5"
 
