@@ -262,7 +262,7 @@ Operation_list =
 
 Operation: Box<Ope> =
     <po: ( <Ident_list> "<--" )? > <n:Identifier> <pi:Paren_ident_list?> "="
-        <s:Substitution>
+        <s:Substitution2>
     =>
         Box::new( Ope{
             param_out: match po {
@@ -277,19 +277,36 @@ Operation: Box<Ope> =
             sub: s, 
             });
 
-Substitution: Box<Sub>  = {
-    "BEGIN" <Substitution2> "END" =>
+Substitution: Box<Sub> = {
+    <l:Substitution> ";" <r:Substitution2> =>
+        Box::new(Sub::Bin(l, SubBinOpe::Sequence, r)),
+        
+    <l:Substitution> "||" <r:Substitution2> =>
+        Box::new(Sub::Bin(l, SubBinOpe::Parallel, r)),
+        
+    <Substitution2>,
+};
+
+Substitution2: Box<Sub>  = {
+    "BEGIN" <Substitution> "END" =>
         Box::new(Sub::Begin(<>)),
     
-    "PRE" <e:Expression> "THEN" <s:Substitution2> "END" =>
-        Box::new(Sub::PreAssert(SubPreAssertOpe::Pre,
-                       e,
-                       s )),
+    "PRE" <e:Expression> "THEN" <s:Substitution> "END" =>
+        Box::new(Sub::PreAssert(SubPreAssertOpe::Pre, e, s )),
+                       
+    "ANY" <x:Ident_list> "WHERE" <e:Expression> "THEN" <s:Substitution> "END" =>
+        Box::new(Sub::AnyLet( SubAnyLet::Any, x, e, s )),
+                       
+    "LET" <x:Ident_list> "BE" <e:Expression> "THEN" <s:Substitution> "END" =>
+        Box::new(Sub::AnyLet( SubAnyLet::Let, x, e, s )),
     
-    "VAR" <x:Ident_list> "IN" <s:Substitution2> "END" =>
+    "VAR" <x:Ident_list> "IN" <s:Substitution> "END" =>
         Box::new(Sub::Var(x, s)),
+        
+    "CHOICE" <s:Substitution> <sl:("OR" <Substitution>)*> "END" =>
+        Box::new(Sub::Choice(sl)),
     
-    "WHILE" <cond:Expression> "DO" <s:Substitution2>
+    "WHILE" <cond:Expression> "DO" <s:Substitution>
                        "INVARIANT" <inv:Expression>
                        "VARIANT" <var:Expression>
                        "END" =>
@@ -297,24 +314,11 @@ Substitution: Box<Sub>  = {
                    s,
                    inv,
                    var )),
-};
-
-Substitution2: Box<Sub> = {
-    <l:Substitution2> ";" <r:Substitution3> =>
-        Box::new(Sub::Bin(l, SubBinOpe::Sequence, r)),
-        
-    <l:Substitution2> "||" <r:Substitution3> =>
-        Box::new(Sub::Bin(l, SubBinOpe::Parallel, r)),
-        
-    <Substitution3>,
-};
-
-Substitution3: Box<Sub> = {
+                   
     <l:Expression> ":=" <r:Expression> =>
         Box::new(Sub::Simple(l, SubSimple::Assign, r)),
-        
-    <Substitution>,
 };
+
 
 Expression: Box<Expr> = {
     <l:Expression> "<=>" <r:Expression2> =>
