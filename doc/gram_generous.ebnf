@@ -4,8 +4,8 @@ component
 
 clause
   ::= "REFINES" id
-    | ("IMPORTS" | "INCLUDES" | "EXTENDS") expr
-    | ("SEES" | "PROMOTES" | "USES") idList
+    | ("IMPORTS" | "INCLUDES" | "EXTENDS") instList
+    | ("SEES" | "PROMOTES" | "USES") idListRen
     | ("ABSTRACT_CONSTANTS" | "ABSTRACT_VARIABLES" | "CONCRETE_CONSTANTS" | "CONCRETE_VARIABLES" | "CONSTANTS" | "VARIABLES") idList
     | ("CONSTRAINTS" | "PROPERTIES" | "INVARIANT")   expr
     | ("SETS" | "VALUES" | "ASSERTIONS") expr
@@ -129,6 +129,13 @@ exprEnd
     | ("!" | "#" ) (id | parIdList) "." "(" expr ")"
     | ("SIGMA" | "PI" | "UNION" | "INTER" | "%") (id | parIdList) "." "(" expr "|" expr ")"
 
+instList
+  ::= inst
+    | instList "," inst
+    
+inst
+  ::= idRen ( "(" expr115 ")" )? 
+
 parIdList
   ::= "(" idList ")"
 
@@ -136,6 +143,12 @@ idList
   ::= id
     | idList "," id
     
+idListRen
+  ::= idRen
+    | idListRen "," idRen
+    
+idRen
+  ::= ID ("." ID)?
+    
 id
   ::= ID "$0"?
-    | RENID

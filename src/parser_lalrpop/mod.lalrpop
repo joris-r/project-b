@@ -13,6 +13,9 @@ Decl_component: ComponentKind = {
     "MACHINE" =>
         ComponentKind::Machine,
         
+    "REFINEMENT" =>
+        ComponentKind::Refinement,
+        
     "IMPLEMENTATION" =>
         ComponentKind::Implementation,
 };
@@ -37,10 +40,119 @@ Statements: ComponentBuilder = {
         }
     },
     
-    <a:Statements> <k:"CONCRETE_VARIABLES"> <b:Ident_list> => {
+    <a:Statements> <k:"IMPORTS"> <b:ListSep<Instance,",">> => {
+        if a.imports.len() == 0 {
+            let mut a = a;
+            a.imports = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    <a:Statements> <k:"INCLUDES"> <b:ListSep<Instance,",">> => {
+        if a.includes.len() == 0 {
+            let mut a = a;
+            a.includes = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    <a:Statements> <k:"EXTENDS"> <b:ListSep<Instance,",">> => {
+        if a.extends.len() == 0 {
+            let mut a = a;
+            a.extends = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    <a:Statements> <k:"SEES"> <b:Ident_list> => {
+        if a.sees.is_empty() {
+            let mut a = a;
+            a.sees = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    <a:Statements> <k:"PROMOTES"> <b:Ident_list> => {
+        if a.promotes.is_empty() {
+            let mut a = a;
+            a.promotes = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    <a:Statements> <k:"USES"> <b:Ident_list> => {
+        if a.uses.is_empty() {
+            let mut a = a;
+            a.uses = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    <a:Statements> <k:"ABSTRACT_CONSTANTS"> <b:Ident_list> => {
+        if a.abstract_constants.is_empty() {
+            let mut a = a;
+            a.abstract_constants = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    <a:Statements> <k:"ABSTRACT_VARIABLES"> <b:Ident_list> => {
+        if a.abstract_variables.is_empty() {
+            let mut a = a;
+            a.abstract_variables = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    <a:Statements> <k:"CONCRETE_CONSTANTS"> <b:Ident_list> => {
         if a.concrete_constants.is_empty() {
             let mut a = a;
             a.concrete_constants = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    <a:Statements> <k:"CONCRETE_VARIABLES"> <b:Ident_list> => {
+        if a.concrete_variables.is_empty() {
+            let mut a = a;
+            a.concrete_variables = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    <a:Statements> <k:"CONSTANTS"> <b:Ident_list> => {
+        if a.constants.is_empty() {
+            let mut a = a;
+            a.constants = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    <a:Statements> <k:"VARIABLES"> <b:Ident_list> => {
+        if a.variables.is_empty() {
+            let mut a = a;
+            a.variables = b;
             a
         } else {
             panic!(format!("multiple {:?}", k))
@@ -51,7 +163,18 @@ Statements: ComponentBuilder = {
         match a.constraints {
             None => {
                 let mut a = a;
-                a.constraints = Some(Box::new(b));
+                a.constraints = Some(b);
+                a
+            },
+            _ => panic!(format!("multiple {:?}", k)),
+        }
+    },
+    
+    <a:Statements> <k:"PROPERTIES"> <b:Expression> => {
+        match a.properties {
+            None => {
+                let mut a = a;
+                a.properties = Some(b);
                 a
             },
             _ => panic!(format!("multiple {:?}", k)),
@@ -62,10 +185,40 @@ Statements: ComponentBuilder = {
         match a.invariant {
             None => {
                 let mut a = a;
-                a.invariant = Some(Box::new(b));
+                a.invariant = Some(b);
                 a
             },
             _ => panic!(format!("multiple {:?}", k)),
+        }
+    },
+    
+    <a:Statements> <k:"SETS"> <b:ListSep<Expression,";">> => {
+        if a.sets.is_empty() {
+            let mut a = a;
+            a.sets = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    <a:Statements> <k:"VALUES"> <b:ListSep<Expression,";">> => {
+        if a.values.is_empty() {
+            let mut a = a;
+            a.values = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+    
+    <a:Statements> <k:"ASSERTIONS"> <b:ListSep<Expression,";">> => {
+        if a.assertions.is_empty() {
+            let mut a = a;
+            a.assertions = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
         }
     },
     
@@ -73,7 +226,7 @@ Statements: ComponentBuilder = {
         match a.initialisation {
             None => {
                 let mut a = a;
-                a.initialisation = Some(Box::new(b));
+                a.initialisation = Some(b);
                 a
             },
             _ => panic!(format!("multiple {:?}", k)),
@@ -90,6 +243,16 @@ Statements: ComponentBuilder = {
         }
     },
     
+    <a:Statements> <k:"LOCAL_OPERATIONS"> <b:Operation_list> => {
+        if a.local_operations.is_empty() {
+            let mut a = a;
+            a.local_operations = b;
+            a
+        } else {
+            panic!(format!("multiple {:?}", k))
+        }
+    },
+
     () =>
         ComponentBuilder::new(),
 };
@@ -111,161 +274,161 @@ Operation: Box<Ope> =
                             None => vec![],
                             Some(v) => v,
                        },
-            sub: Box::new(s), 
+            sub: s, 
             });
 
-Substitution: Sub  = {
+Substitution: Box<Sub>  = {
     "BEGIN" <Substitution2> "END" =>
-        Sub::Begin(Box::new(<>)),
+        Box::new(Sub::Begin(<>)),
     
     "PRE" <e:Expression> "THEN" <s:Substitution2> "END" =>
-        Sub::PreAssert(SubPreAssertOpe::Pre,
-                       Box::new(e),
-                       Box::new(s) ),
+        Box::new(Sub::PreAssert(SubPreAssertOpe::Pre,
+                       e,
+                       s )),
     
     "VAR" <x:Ident_list> "IN" <s:Substitution2> "END" =>
-        Sub::Var(x, Box::new(s)),
+        Box::new(Sub::Var(x, s)),
     
     "WHILE" <cond:Expression> "DO" <s:Substitution2>
                        "INVARIANT" <inv:Expression>
                        "VARIANT" <var:Expression>
                        "END" =>
-        Sub::While(Box::new(cond),
-                   Box::new(s),
-                   Box::new(inv),
-                   Box::new(var) ),
+        Box::new(Sub::While(cond,
+                   s,
+                   inv,
+                   var )),
 };
 
-Substitution2: Sub = {
+Substitution2: Box<Sub> = {
     <l:Substitution2> ";" <r:Substitution3> =>
-        Sub::Bin(Box::new(l), SubBinOpe::Sequence, Box::new(r)),
+        Box::new(Sub::Bin(l, SubBinOpe::Sequence, r)),
         
     <l:Substitution2> "||" <r:Substitution3> =>
-        Sub::Bin(Box::new(l), SubBinOpe::Parallel, Box::new(r)),
+        Box::new(Sub::Bin(l, SubBinOpe::Parallel, r)),
         
     <Substitution3>,
 };
 
-Substitution3: Sub = {
+Substitution3: Box<Sub> = {
     <l:Expression> ":=" <r:Expression> =>
-        Sub::Simple(Box::new(l), SubSimple::Assign, Box::new(r)),
+        Box::new(Sub::Simple(l, SubSimple::Assign, r)),
         
     <Substitution>,
 };
 
-Expression: Expr = {
+Expression: Box<Expr> = {
     <l:Expression> "<=>" <r:Expression2> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Equiv, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Equiv, r)),
     
     <l:Expression> "=>" <r:Expression2> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Imply, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Imply, r)),
     
     <Expression2>,
 };
 
-Expression2: Expr = {
+Expression2: Box<Expr> = {
     <l:Expression2> "&" <r:Expression3> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::And, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::And, r)),
     
     <l:Expression2> "or" <r:Expression3> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Or, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Or, r)),
     
     <Expression3>,
 };
 
-Expression3: Expr = {
+Expression3: Box<Expr> = {
     <l:Expression3> ":" <r:Expression4> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Colon, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Colon, r)),
     
     <l:Expression3> "<=" <r:Expression4> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Leq, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Leq, r)),
     
     <l:Expression3> "=" <r:Expression4> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Equal, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Equal, r)),
     
     <Expression4>,
 };
 
-Expression4: Expr = {
+Expression4: Box<Expr> = {
     <l:Expression4> "-->" <r:Expression5> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Tfun, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Tfun, r)),
         
     <Expression5>,
 };
 
-Expression5: Expr = {
+Expression5: Box<Expr> = {
     <l:Expression5> "<|" <r:Expression6> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Domrestr, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Domrestr, r)),
         
     <l:Expression5> "\\/" <r:Expression6> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Sunion, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Sunion, r)),
         
     <l:Expression5> "/\\" <r:Expression6> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Sinter, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Sinter, r)),
         
     <l:Expression5> "◦" <r:Expression6> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Semicolon, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Semicolon, r)),
         
     <l:Expression5> "×" <r:Expression6> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Star, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Star, r)),
         
     <Expression6>,
 };
 
-Expression6: Expr = {
+Expression6: Box<Expr> = {
     <l:Expression6> ".." <r:Expression7> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Interval, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Interval, r)),
         
     <Expression7>,
 };
 
-Expression7: Expr = {
+Expression7: Box<Expr> = {
     <l:Expression7> "+" <r:Expression8> => 
-        Expr::Bin(Box::new(l), ExprBinOpe::Plus, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Plus, r)),
         
     <l:Expression7> "-" <r:Expression8> => 
-        Expr::Bin(Box::new(l), ExprBinOpe::Minus, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Minus, r)),
         
     <Expression8>,
 };
 
-Expression8: Expr = {
+Expression8: Box<Expr> = {
     <l:Expression8> "·" <r:Expression9> => 
-        Expr::Bin(Box::new(l), ExprBinOpe::Star, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Star, r)),
         
     <l:Expression8> "/" <r:Expression9> => 
-        Expr::Bin(Box::new(l), ExprBinOpe::Slash, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Slash, r)),
         
     <l:Expression8> "mod" <r:Expression9> => 
-        Expr::Bin(Box::new(l), ExprBinOpe::Mod, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Mod, r)),
         
     <Expression9>,
 };
 
-Expression9: Expr = {
+Expression9: Box<Expr> = {
     "-" <Expression9> =>
-        Expr::Unary(ExprUnaryOpe::Minus, Box::new(<>)),
+        Box::new(Expr::Unary(ExprUnaryOpe::Minus, <>)),
         
     "not" <Expression9> =>
-        Expr::Unary(ExprUnaryOpe::Negate, Box::new(<>)),
+        Box::new(Expr::Unary(ExprUnaryOpe::Negate, <>)),
         
     <Expression10>,
 };
 
-Expression10: Expr = {
+Expression10: Box<Expr> = {
     <l:Expression10> <r:Expression11> =>
-        Expr::Bin(Box::new(l), ExprBinOpe::Apply, Box::new(r)),
+        Box::new(Expr::Bin(l, ExprBinOpe::Apply, r)),
         
     <Expression11>,
 };
 
-Expression11: Expr = {
-    <Identifier> => Expr::Id(<>.to_owned()),
+Expression11: Box<Expr> = {
+    <Identifier> => Box::new(Expr::Id(<>.to_owned())),
     
-    <Number>,
+    <Number> => Box::new(<>),
     
     "%" <v:Ident_or_paren_ident_list> "." "(" <e:Expression> "|" <f:Expression> ")"
-        => Expr::Quant(ExprQuantOpe::Lambda, v, Box::new(e), Box::new(f) ),
+        => Box::new(Expr::Quant(ExprQuantOpe::Lambda, v, e, f )),
 };
 
 Ident_or_paren_ident_list = {
@@ -286,8 +449,21 @@ Ident_list: Vec<String> = {
     <Identifier> => vec![<>.to_owned()]
 };
 
+Instance: ( String, Option<Box<Expr>> ) = {
+    <s:Identifier> <t:( "(" <Expression> ")" )?> => {
+        match t {
+            None => (s,None),
+            Some(e) => (s,Some(e)),
+        }
+    }
+};
+
 Number: Expr = {
     <s:r"[0-9]+"> => Expr::Num(s.to_owned()),
+};
+
+RenIdent: (String, Option<String>) = {
+    <Identifier> <( "." <Identifier> )?>
 };
 
 Identifier: String ={
